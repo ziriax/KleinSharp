@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics.X86;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
 
@@ -97,7 +96,7 @@ namespace KleinSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static void sw20(__m128 a, __m128 b, out __m128 p2)
+		public static __m128 sw20(__m128 a, __m128 b)
 		{
 			//                       -b0(a1^2 + a2^2 + a3^2) e0123 +
 			// (-2a3(a1 b1 + a2 b2) + b3(a1^2 + a2^2 - a3^2)) e03
@@ -107,7 +106,7 @@ namespace KleinSharp
 			__m128 a_zzwy = KLN_SWIZZLE(a, 1, 3, 2, 2);
 			__m128 a_wwyz = KLN_SWIZZLE(a, 2, 1, 3, 3);
 
-			p2 = _mm_mul_ps(a, b);
+			var p2 = _mm_mul_ps(a, b);
 			p2 = _mm_add_ps(p2, _mm_mul_ps(a_zzwy, KLN_SWIZZLE(b, 1, 3, 2, 0)));
 			p2 = _mm_mul_ps(
 				p2, _mm_mul_ps(a_wwyz, _mm_set_ps(-2f, -2f, -2f, 0f)));
@@ -119,10 +118,12 @@ namespace KleinSharp
 			tmp = _mm_sub_ps(tmp, _mm_mul_ps(a_wwyz, a_wwyz));
 			p2 = _mm_add_ps(p2, _mm_mul_ps(tmp, KLN_SWIZZLE(b, 2, 1, 3, 0)));
 			p2 = KLN_SWIZZLE(p2, 1, 3, 2, 0);
+
+			return p2;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static void sw30(__m128 a, __m128 b, out __m128 p3_out)
+		public static __m128 sw30(__m128 a, __m128 b)
 		{
 			//                                b0(a1^2 + a2^2 + a3^2)  e123 +
 			// (-2a1(a0 b0 + a3 b3 + a2 b2) + b1(a2^2 + a3^2 - a1^2)) e032 +
@@ -132,7 +133,7 @@ namespace KleinSharp
 			__m128 a_zwyz = KLN_SWIZZLE(a, 2, 1, 3, 2);
 			__m128 a_yzwy = KLN_SWIZZLE(a, 1, 3, 2, 1);
 
-			p3_out
+			var p3_out
 				= _mm_mul_ps(KLN_SWIZZLE(a, 0, 0, 0, 0), KLN_SWIZZLE(b, 0, 0, 0, 0));
 			p3_out
 				= _mm_add_ps(p3_out, _mm_mul_ps(a_zwyz, KLN_SWIZZLE(b, 2, 1, 3, 0)));
@@ -148,6 +149,8 @@ namespace KleinSharp
 				tmp, _mm_xor_ps(_mm_mul_ps(a_wyzw, a_wyzw), _mm_set_ss(-0f)));
 
 			p3_out = _mm_add_ps(p3_out, _mm_mul_ps(b, tmp));
+
+			return p3_out;
 		}
 
 		// Apply a translator to a plane.
@@ -259,11 +262,6 @@ namespace KleinSharp
 			__m128* inp, __m128 b, __m128* c,
 			__m128* res, int count = 0)
 		{
-			if (Variadic && Translate)
-			{
-
-			}
-
 			// p1 block
 			// a0(b0^2 + b1^2 + b2^2 + b3^2) +
 			// (a1(b1^2 + b0^2 - b3^2 - b2^2) +

@@ -21,9 +21,9 @@ namespace KleinSharp
 
 		public readonly __m128 P3;
 
-		public Point(__m128 xmm)
+		public Point(__m128 p3)
 		{
-			P3 = xmm;
+			P3 = p3;
 		}
 
 		/// Component-wise constructor (homogeneous coordinate is automatically initialized to 1)
@@ -79,28 +79,25 @@ namespace KleinSharp
 		public unsafe void Store(float* data) => _mm_store_ps(data, P3);
 
 		/// <summary>
-		/// Normalize this Point (division is done via rcpps with an additional Newton-Raphson refinement).
-		/// </summary>
-		public static __m128 Normalized(__m128 p3)
-		{
-			__m128 tmp = Detail.rcp_nr1(KLN_SWIZZLE(p3, 0, 0, 0, 0));
-			return _mm_mul_ps(p3, tmp);
-		}
-
-		/// <summary>
 		/// Return a normalized copy of this Point.
 		/// </summary>
-		public Point Normalized() => new Point(Normalized(P3));
-
-		public static __m128 Inverse(__m128 p3)
+		/// <remarks>
+		/// Normalize this Point (division is done via rcpps with an additional Newton-Raphson refinement).
+		/// </remarks>
+		public Point Normalized()
 		{
+			__m128 tmp = Detail.rcp_nr1(KLN_SWIZZLE(P3, 0, 0, 0, 0));
+			return new Point(_mm_mul_ps(P3, tmp));
+		}
+
+		public Point Inverse()
+		{
+			__m128 p3 = P3;
 			__m128 invNorm = Detail.rcp_nr1(KLN_SWIZZLE(p3, 0, 0, 0, 0));
 			p3 = _mm_mul_ps(invNorm, p3);
 			p3 = _mm_mul_ps(invNorm, p3);
-			return p3;
+			return new Point(p3);
 		}
-
-		public Point Inverse() => new Point(Inverse(P3));
 
 		public float X => P3.GetElement(1);
 		public float E032 => X;

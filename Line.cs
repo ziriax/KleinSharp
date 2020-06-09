@@ -69,6 +69,12 @@ namespace KleinSharp
 			P2 = _mm_setzero_ps();
 		}
 
+		public unsafe Line(__m128* p1p2)
+		{
+			P1 = p1p2[0];
+			P2 = p1p2[1];
+		}
+
 		public void Deconstruct(out float e01, out float e02, out float e03, out float e23, out float e31, out float e12)
 		{
 			e01 = E01;

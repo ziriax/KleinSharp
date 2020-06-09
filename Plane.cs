@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
@@ -7,20 +8,28 @@ using static KleinSharp.Simd;
 namespace KleinSharp
 {
 	/// <summary>
-	/// In projective geometry, Planes are the fundamental element through which all
-	/// other entities are constructed. Lines are the meet of two Planes, and points
-	/// are the meet of three Planes (equivalently, a line and a Plane).
-	///
-	/// The Plane multivector in PGA looks like:
-	///
-	/// <b>d e₀ + a e₁ + b e₂ + c e₃</b>
-	/// 
-	/// Points that reside on the Plane satisfy the familiar equation:
-	/// 
-	/// <b>d + a x + b y + c z = 0</b>
-	///
+	/// <p>In projective geometry, <b>planes</b> are the fundamental element through which all
+	/// other entities are constructed.</p>
+	/// <br/>
+	/// <p>Lines are the meet of two planes, and points are the meet of three planes (equivalently, a line and a plane).</p>
+	/// <br/>
+	/// <p>The Plane multivector in PGA looks like <c>d e₀ + a e₁ + b e₂ + c e₃</c>
+	/// </p>
+	/// <br/>
+	/// where <c>e₁, e₂, e₃ </c>are the basis Euclidean YZ, ZX and XY planes, and e₀ is the ideal plane (aka the plane "at infinity")
+	/// <br/>
+	/// <p>
+	/// <br/>
+	/// <br/>
+	/// Points that reside on the plane satisfy the familiar equation:
+	/// <br/>
+	/// <br/>
+	/// d + a x + b y + c z = 0
+	/// <br/>
+	/// </p>
 	/// </summary>
-	public struct Plane
+	[StructLayout(LayoutKind.Sequential)]
+	public struct Plane : IEquatable<Plane>
 	{
 		public readonly __m128 P0;
 
@@ -58,16 +67,6 @@ namespace KleinSharp
 			}
 		}
 
-		public static __m128 Normalized(__m128 p0)
-		{
-			__m128 invNorm = Detail.rsqrt_nr1(Detail.hi_dp_bc(p0, p0));
-			invNorm = Sse41.IsSupported
-				? _mm_blend_ps(invNorm, _mm_set_ss(1f), 1)
-				: _mm_add_ps(invNorm, _mm_set_ss(1f));
-
-			return _mm_mul_ps(invNorm, p0);
-		}
-
 		/// <summary>
 		/// Normalize this Plane $p$ such that $p \cdot p = 1$.
 		///
@@ -80,7 +79,11 @@ namespace KleinSharp
 		/// </summary>
 		public Plane Normalized()
 		{
-			return new Plane(Normalized(P0));
+			__m128 invNorm = Detail.rsqrt_nr1(Detail.hi_dp_bc(P0, P0));
+			invNorm = Sse41.IsSupported
+				? _mm_blend_ps(invNorm, _mm_set_ss(1f), 1)
+				: _mm_add_ps(invNorm, _mm_set_ss(1f));
+			return new Plane(_mm_mul_ps(invNorm, P0));
 		}
 
 		/// <summary>
@@ -97,17 +100,13 @@ namespace KleinSharp
 			return norm;
 		}
 
-		public static __m128 Inverted(__m128 p0)
+		public Plane Inverse()
 		{
+			__m128 p0 = P0;
 			__m128 invNorm = Detail.rsqrt_nr1(Detail.hi_dp_bc(p0, p0));
 			p0 = _mm_mul_ps(invNorm, p0);
 			p0 = _mm_mul_ps(invNorm, p0);
-			return p0;
-		}
-
-		public Plane Inverted()
-		{
-			return new Plane(Inverted(P0));
+			return new Plane(p0);
 		}
 
 		public bool Equals(Plane other)
@@ -135,28 +134,38 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Reflect line $\ell$ through this Plane $p$. The operation
-		/// performed via this call operator is an optimized routine equivalent to
-		/// the expression $p \ell p$.
+		/// <p>Reflect line <i>L</i> through this plane <b>p</b>.</p>
+		/// <p>This an optimized routine equivalent to the expression <b>p</b> <i>L</i> <b>p</b></p>
 		/// </summary>
 		public Line Reflect(in Line l)
 		{
 			Detail.sw10(P0, l.P1, out var p1, out var p2);
-			Detail.sw20(P0, l.P2, out var p2Tmp);
-			p2 = _mm_add_ps(p2, p2Tmp);
+			p2 = _mm_add_ps(p2, Detail.sw20(P0, l.P2));
 			return new Line(p1, p2);
 		}
 
 		/// <summary>
-		/// Reflect the point $P$ through this Plane $p$. The operation
-		/// performed via this call operator is an optimized routine equivalent to
-		/// the expression $p P p$.
+		/// Reflect the point $Q$ through this plane $p$.
+		///
+		/// The operation performed via this index operator, e.g. p[Q],
+		/// is an optimized routine equivalent to the expression $p Q p$.
 		/// </summary>
-		public Point Reflect(Point p)
-		{
-			Detail.sw30(P0, p.P3, out var p3);
-			return new Point(p3);
-		}
+		public Point Reflect(Point p) => new Point(Detail.sw30(P0, p.P3));
+
+		/// <summary>
+		/// Same as <see cref="Reflect(Plane)"/>
+		/// </summary>
+		public Plane this[in Plane p] => Reflect(p);
+
+		/// <summary>
+		/// Same as <see cref="Reflect(Line)"/>
+		/// </summary>
+		public Line this[in Line l] => Reflect(l);
+
+		/// <summary>
+		/// Same as <see cref="Reflect(Point)"/>
+		/// </summary>
+		public Point this[Point p] => Reflect(p);
 
 		public float X => P0.GetElement(1);
 		public float E1 => X;
@@ -199,6 +208,26 @@ namespace KleinSharp
 		public static Plane operator -(Plane p)
 		{
 			return new Plane(_mm_xor_ps(p.P0, _mm_set_ps(-0f, -0f, -0f, 0f)));
+		}
+
+		public override bool Equals(object obj)
+		{
+			return obj is Plane other && Equals(other);
+		}
+
+		public override int GetHashCode()
+		{
+			return P0.GetHashCode();
+		}
+
+		public static bool operator ==(Plane left, Plane right)
+		{
+			return left.Equals(right);
+		}
+
+		public static bool operator !=(Plane left, Plane right)
+		{
+			return !left.Equals(right);
 		}
 	}
 }

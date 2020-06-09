@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using __m128 = System.Runtime.Intrinsics.Vector128<float>;
+using static KleinSharp.Simd;
 
 namespace KleinSharp
 {
@@ -47,7 +48,7 @@ namespace KleinSharp
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct Branch : IEquatable<Branch>
 	{
-		public readonly Vector128<float> P1;
+		public readonly __m128 P1;
 
 		/// <summary>
 		/// Construct the Branch as the following multivector:
@@ -60,10 +61,10 @@ namespace KleinSharp
 		/// </summary>
 		public Branch(float a, float b, float c)
 		{
-			P1 = Simd._mm_set_ps(c, b, a, 0f);
+			P1 = _mm_set_ps(c, b, a, 0f);
 		}
 
-		public Branch(Vector128<float> xmm)
+		public Branch(__m128 xmm)
 		{
 			P1 = xmm;
 		}
@@ -98,7 +99,7 @@ namespace KleinSharp
 		public float SquaredNorm()
 		{
 			var dp = Detail.hi_dp(P1, P1);
-			Simd._mm_store_ss(out var norm, dp);
+			_mm_store_ss(out var norm, dp);
 			return norm;
 		}
 
@@ -110,53 +111,73 @@ namespace KleinSharp
 			return MathF.Sqrt(SquaredNorm());
 		}
 
-		public static Vector128<float> Normalized(Vector128<float> p)
+		public static __m128 Normalized(__m128 p)
 		{
-			Vector128<float> inv = Detail.rsqrt_nr1(Detail.hi_dp_bc(p, p));
-			return Simd._mm_mul_ps(p, inv);
+			__m128 inv = Detail.rsqrt_nr1(Detail.hi_dp_bc(p, p));
+			return _mm_mul_ps(p, inv);
 		}
 
 		public Branch Normalized() => new Branch(Normalized(P1));
 
-		public static Vector128<float> Inverse(Vector128<float> p)
+		public static __m128 Inverse(__m128 p)
 		{
-			Vector128<float> inv = Detail.rsqrt_nr1(Detail.hi_dp_bc(p, p));
-			p = Simd._mm_mul_ps(p, inv);
-			p = Simd._mm_mul_ps(p, inv);
-			p = Simd._mm_xor_ps(Simd._mm_set_ps(-0f, -0f, -0f, 0f), p);
+			__m128 inv = Detail.rsqrt_nr1(Detail.hi_dp_bc(p, p));
+			p = _mm_mul_ps(p, inv);
+			p = _mm_mul_ps(p, inv);
+			p = _mm_xor_ps(_mm_set_ps(-0f, -0f, -0f, 0f), p);
 			return p;
 		}
 
 		public Branch Inverse() => new Branch(Inverse(P1));
 
+		public Rotor Sqrt()
+		{
+			return new Rotor(Rotor.Normalized(_mm_add_ss(P1, _mm_set_ss(1f))));
+		}
+
+		/// <summary>
+		/// Exponentiate a Branch to produce a Rotor.
+		/// </summary>
+		public Rotor Exp()
+		{
+			// Compute the Rotor angle
+			_mm_store_ss(out var ang, Detail.sqrt_nr1(Detail.hi_dp(P1, P1)));
+			float cos_ang = MathF.Cos(ang);
+			float sin_ang = MathF.Sin(ang) / ang;
+
+			var p1 = _mm_mul_ps(_mm_set1_ps(sin_ang), P1);
+			p1 = _mm_add_ps(p1, _mm_set_ps(0f, 0f, 0f, cos_ang));
+			return new Rotor(p1);
+		}
+
 		public static Branch operator +(Branch a, Branch b)
 		{
-			return new Branch(Simd._mm_add_ps(a.P1, b.P1));
+			return new Branch(_mm_add_ps(a.P1, b.P1));
 		}
 
 		public static Branch operator -(Branch a, Branch b)
 		{
-			return new Branch(Simd._mm_sub_ps(a.P1, b.P1));
+			return new Branch(_mm_sub_ps(a.P1, b.P1));
 		}
 
 		public static Branch operator *(Branch b, float s)
 		{
-			return new Branch(Simd._mm_mul_ps(b.P1, Simd._mm_set1_ps(s)));
+			return new Branch(_mm_mul_ps(b.P1, _mm_set1_ps(s)));
 		}
 
 		public static Branch operator *(float s, Branch b)
 		{
-			return new Branch(Simd._mm_mul_ps(b.P1, Simd._mm_set1_ps(s)));
+			return new Branch(_mm_mul_ps(b.P1, _mm_set1_ps(s)));
 		}
 
 		public static Branch operator /(Branch b, float s)
 		{
-			return new Branch(Simd._mm_mul_ps(b.P1, Detail.rcp_nr1(Simd._mm_set1_ps(s))));
+			return new Branch(_mm_mul_ps(b.P1, Detail.rcp_nr1(_mm_set1_ps(s))));
 		}
 
 		public static Branch operator -(Branch b)
 		{
-			return new Branch(Simd._mm_xor_ps(b.P1, Simd._mm_set1_ps(-0f)));
+			return new Branch(_mm_xor_ps(b.P1, _mm_set1_ps(-0f)));
 		}
 
 		/// <summary>
@@ -164,8 +185,8 @@ namespace KleinSharp
 		/// </summary>
 		public static Branch operator ~(Branch b)
 		{
-			Vector128<float> flip = Simd._mm_set_ps(-0f, -0f, -0f, 0f);
-			return new Branch(Simd._mm_xor_ps(b.P1, flip));
+			__m128 flip = _mm_set_ps(-0f, -0f, -0f, 0f);
+			return new Branch(_mm_xor_ps(b.P1, flip));
 		}
 
 		public bool Equals(Branch other)

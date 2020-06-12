@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
 
 namespace KleinSharp
 {
 	/// <summary>
-	/// A Point is represented as the multivector <b>x e₀₃₂ + y e₀₁₃ + z e₀₂₁ + e₁₂₃</b>
-	///
-	/// The Point has a trivector representation because it is
-	/// the fixed Point of 3 planar reflections (each of which is a grade-1 multivector).
-	///
+	/// A Point is represented as the multivector <code>e₁₂₃ + x e₀₃₂ + y e₀₁₃ + z e₀₂₁</code>
+	/// <br/>
+	/// The Point has a trivector representation because it is the
+	/// fixed point of 3 planar reflections (each of which is a grade-1 multivector).
+	/// <br/>
 	/// In practice, the coordinate mapping can be thought of as an implementation detail.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct Point
+	public readonly struct Point : IEquatable<Point>
 	{
 		public static readonly Origin Origin;
 
@@ -63,7 +64,14 @@ namespace KleinSharp
 			}
 		}
 
-		public void Deconstruct(out float e032, out float e013, out float e021, out float e123)
+		public void Deconstruct(out float x, out float y, out float z)
+		{
+			x = X;
+			y = Y;
+			z = Z;
+		}
+
+		public void Deconstruct(out float e123, out float e032, out float e013, out float e021)
 		{
 			e032 = E032;
 			e013 = E013;
@@ -79,10 +87,10 @@ namespace KleinSharp
 		public unsafe void Store(float* data) => _mm_store_ps(data, P3);
 
 		/// <summary>
-		/// Return a normalized copy of this Point.
+		/// Return a normalized copy of this Point, so that the coefficient of e₁₂₃ becomes 1.
 		/// </summary>
 		/// <remarks>
-		/// Normalize this Point (division is done via rcpps with an additional Newton-Raphson refinement).
+		/// Division is done via rcpps with an additional Newton-Raphson refinement.
 		/// </remarks>
 		public Point Normalized()
 		{
@@ -90,6 +98,12 @@ namespace KleinSharp
 			return new Point(_mm_mul_ps(P3, tmp));
 		}
 
+		/// <summary>
+		/// Returns the inverse of this point. A point multiplied with its inverse is 1.
+		/// </summary>
+		/// <remarks>
+		/// Division is done via rcpps with an additional Newton-Raphson refinement.
+		/// </remarks>
 		public Point Inverse()
 		{
 			__m128 p3 = P3;
@@ -110,7 +124,6 @@ namespace KleinSharp
 
 		/// The homogeneous coordinate `w` is exactly $1$ when normalized.
 		public float W => P3.GetElement(0);
-
 		public float E123 => W;
 
 		public static Point operator +(Point a, Point b)
@@ -149,15 +162,58 @@ namespace KleinSharp
 		/// <summary>
 		/// Reversion operator
 		/// </summary>
-		public static Point operator ~(Point p)
+		public static Point operator~ (Point p)
 		{
 			__m128 flip = _mm_set1_ps(-0f);
 			return new Point(_mm_xor_ps(p.P3, flip));
 		}
 
+		/// <summary>
+		/// Generates a translator $t$ that produces a displacement along the line
+		/// between points $a$ and $b$. The translator given by $\sqrt{t}$ takes $b$ to $a$.
+		/// </summary>
+		public static Translator operator* (Point a, Point b)
+		{
+			return new Translator(Detail.gp33(a.P3, b.P3));
+		}
+
 		public static implicit operator Point(Origin _)
 		{
-			return new Point(_mm_set1_ps(1f));
+			return new Point(_mm_set_ss(1f));
+		}
+
+		public bool Equals(Point other)
+		{
+			return P3.Equals(other.P3);
+		}
+
+		public override bool Equals(object obj)
+		{
+			return obj is Point other && Equals(other);
+		}
+
+		public override int GetHashCode()
+		{
+			return P3.GetHashCode();
+		}
+
+		public static bool operator ==(Point left, Point right)
+		{
+			return left.Equals(right);
+		}
+
+		public static bool operator !=(Point left, Point right)
+		{
+			return !left.Equals(right);
+		}
+
+		public override string ToString()
+		{
+			return new StringBuilder("e₁₂₃", 64)
+				.AppendElement(X, "e₀₃₂")
+				.AppendElement(Y, "e₀₁₃")
+				.AppendElement(Z, "e₀₂₁")
+				.ToString();
 		}
 	}
 }

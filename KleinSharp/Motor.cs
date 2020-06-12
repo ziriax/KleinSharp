@@ -261,7 +261,6 @@ namespace KleinSharp
 
 		public static Motor operator *(Motor l, float s)
 		{
-			Motor c;
 			__m128 vs = _mm_set1_ps(s);
 			var p1 = _mm_mul_ps(l.P1, vs);
 			var p2 = _mm_mul_ps(l.P2, vs);

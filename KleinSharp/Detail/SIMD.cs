@@ -54,7 +54,7 @@ namespace KleinSharp
 		public static __m128 _mm_setzero_ps() => __m128.Zero;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static __m128 _mm_set_ps(float f0, float f1, float f2, float f3) => Vector128.Create(f0, f1, f2, f3);
+		public static __m128 _mm_set_ps(float f3, float f2, float f1, float f0) => Vector128.Create(f0, f1, f2, f3);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 _mm_rsqrt_ps(__m128 a) => Sse.ReciprocalSqrt(a);
@@ -69,7 +69,7 @@ namespace KleinSharp
 		public static __m128 _mm_castsi128_ps(__m128i a) => a.AsSingle();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static __m128i _mm_set_epi32(int a, int b, int c, int d) => Vector128.Create(a, b, c, d);
+		public static __m128i _mm_set_epi32(int e3, int e2, int e1, int e0) => Vector128.Create(e0, e1, e2, e3);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 _mm_shuffle_ps(__m128 left, __m128 right, byte control) => Sse.Shuffle(left, right, control);

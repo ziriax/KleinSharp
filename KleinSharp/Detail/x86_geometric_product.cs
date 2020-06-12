@@ -150,7 +150,7 @@ namespace KleinSharp
 			p1_out = _mm_add_ps(p1_out, tmp);
 		}
 		// p3: (e123, e021, e013, e032) // p2: (e0123, e01, e02, e03) [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void gp33(__m128 a, __m128 b, out __m128 p2)
+		public static __m128 gp33(__m128 a, __m128 b)
 		{
 			// (-a0 b0) +
 			// (-a0 b1 + a1 b0) e01 +
@@ -168,7 +168,7 @@ namespace KleinSharp
 			ss = _mm_movelh_ps(ss, ss);
 			tmp = _mm_mul_ps(tmp, rcp_nr1(ss));
 
-			p2 = Sse41.IsSupported
+			return Sse41.IsSupported
 				? _mm_blend_ps(tmp, _mm_setzero_ps(), 1)
 				: _mm_and_ps(tmp, _mm_castsi128_ps(_mm_set_epi32(-1, -1, -1, 0)));
 		}

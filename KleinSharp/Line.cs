@@ -353,6 +353,21 @@ namespace KleinSharp
 			return new IdealLine(a.P2) ^ b;
 		}
 
+		public static Plane operator |(Line b, Plane a)
+		{
+			return new Plane(Detail.dotPL(true , a.P0, b.P1, b.P2));
+		}
+
+		public static float operator |(Line a, Line b)
+		{
+			return _mm_store_ss(Detail.dot11(a.P1, b.P1));
+		}
+
+		public static Plane operator |(Line b, Point a)
+		{
+			return a | b;
+		}
+
 
 
 		/// <summary>

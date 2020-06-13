@@ -10,10 +10,17 @@ namespace KleinSharp.Tests
 		public const float Epsilon = 1e-6f;
 
 		[TestMethod]
-		public void Constructs_FromFloats()
+		public void Constructs_FromFloats3()
 		{
 			var p1 = new Point(2f, 3f, 4f);
 			Assert.AreEqual(Vector128.Create(1f, 2f, 3f, 4f), p1.P3);
+		}
+
+		[TestMethod]
+		public void Constructs_FromFloats4()
+		{
+			var p1 = new Point(2f, 3f, 4f, 5f);
+			Assert.AreEqual(Vector128.Create(5f, 2f, 3f, 4f), p1.P3);
 		}
 
 		[TestMethod]
@@ -53,7 +60,7 @@ namespace KleinSharp.Tests
 		public void Deconstructs_WXYZ()
 		{
 			var p1 = new Point(2f, 3f, 4f);
-			var (w, x, y, z) = p1;
+			var (x, y, z, w) = p1;
 			Assert.AreEqual((1f, 2f, 3f, 4f), (w, x, y, z));
 		}
 
@@ -69,8 +76,8 @@ namespace KleinSharp.Tests
 			Assert.AreEqual(4f, ps[3]);
 		}
 
-		[ExpectedException(typeof(ArgumentOutOfRangeException))]
 		[TestMethod]
+		[ExpectedException(typeof(ArgumentOutOfRangeException))]
 		public void Copies_ToTinySpan_Throws()
 		{
 			var ps = new Span<float>(new[] { 1f, 2f, 3f });
@@ -192,9 +199,9 @@ namespace KleinSharp.Tests
 			var p1 = new Point(1f, 2f, 3f);
 			var p2 = new Point(2f, 3f, -1f);
 			var p3 = p1 + p2;
-			Assert.AreEqual(p3.X, 1f + 2f);
-			Assert.AreEqual(p3.Y, 2f + 3f);
-			Assert.AreEqual(p3.Z, 3f - 1f);
+			Assert.AreEqual(1f + 2f, p3.X);
+			Assert.AreEqual(2f + 3f, p3.Y);
+			Assert.AreEqual(3f - 1f, p3.Z);
 		}
 
 		[TestMethod]
@@ -203,9 +210,9 @@ namespace KleinSharp.Tests
 			var p1 = new Point(1f, 2f, 3f);
 			var p2 = new Point(2f, 3f, -1f);
 			var p3 = p1 - p2;
-			Assert.AreEqual(p3.X, 1f - 2f);
-			Assert.AreEqual(p3.Y, 2f - 3f);
-			Assert.AreEqual(p3.Z, 3f + 1f);
+			Assert.AreEqual(1f - 2f, p3.X);
+			Assert.AreEqual(2f - 3f, p3.Y);
+			Assert.AreEqual(3f + 1f, p3.Z);
 		}
 
 		[TestMethod]
@@ -223,11 +230,11 @@ namespace KleinSharp.Tests
 		{
 			var p1 = new Point(2f, 4f, 6f);
 			var p2 = p1 / 2;
-			var (w, x, y, z) = p2;
-			Assert.AreEqual(w, 0.5f, Epsilon);
-			Assert.AreEqual(x, 1f, Epsilon);
-			Assert.AreEqual(y, 2f, Epsilon);
-			Assert.AreEqual(z, 3f, Epsilon);
+			var (x, y, z, w) = p2;
+			Assert.AreEqual(0.5f, w, Epsilon);
+			Assert.AreEqual(1f, x, Epsilon);
+			Assert.AreEqual(2f, y, Epsilon);
+			Assert.AreEqual(3f, z, Epsilon);
 		}
 
 		[TestMethod]
@@ -235,11 +242,11 @@ namespace KleinSharp.Tests
 		{
 			var p1 = new Point(2f, 3f, 4f) * 10;
 			var p2 = p1.Normalized();
-			var (w, x, y, z) = p2;
-			Assert.AreEqual(w, 1f, Epsilon);
-			Assert.AreEqual(x, 2f, Epsilon);
-			Assert.AreEqual(y, 3f, Epsilon);
-			Assert.AreEqual(z, 4f, Epsilon);
+			var (x, y, z, w) = p2;
+			Assert.AreEqual(1f, w, Epsilon);
+			Assert.AreEqual(2f, x, Epsilon);
+			Assert.AreEqual(3f, y, Epsilon);
+			Assert.AreEqual(4f, z, Epsilon);
 		}
 
 		[TestMethod]
@@ -247,44 +254,44 @@ namespace KleinSharp.Tests
 		{
 			var p1 = new Point(2f, 3f, 4f) * 10;
 			var p2 = p1.Inverse();
-			var (w, x, y, z) = p2;
-			Assert.AreEqual(w, 1f / 10, Epsilon);
-			Assert.AreEqual(x, 2f / 10, Epsilon);
-			Assert.AreEqual(y, 3f / 10, Epsilon);
-			Assert.AreEqual(z, 4f / 10, Epsilon);
+			var (x, y, z, w) = p2;
+			Assert.AreEqual(1f / 10, w, Epsilon);
+			Assert.AreEqual(2f / 10, x, Epsilon);
+			Assert.AreEqual(3f / 10, y, Epsilon);
+			Assert.AreEqual(4f / 10, z, Epsilon);
 		}
 
 		[TestMethod]
 		public void Negate_Point()
 		{
 			var p1 = -new Point(2f, 3f, 4f);
-			var (w, x, y, z) = p1;
-			Assert.AreEqual(w, 1f, Epsilon);
-			Assert.AreEqual(x, -2f, Epsilon);
-			Assert.AreEqual(y, -3f, Epsilon);
-			Assert.AreEqual(z, -4f, Epsilon);
+			var (x, y, z, w) = p1;
+			Assert.AreEqual(1f, w, Epsilon);
+			Assert.AreEqual(-2f, x, Epsilon);
+			Assert.AreEqual(-3f, y, Epsilon);
+			Assert.AreEqual(-4f, z, Epsilon);
 		}
 
 		[TestMethod]
 		public void Reverse_Point()
 		{
 			var p1 = ~new Point(2f, 3f, 4f);
-			var (w, x, y, z) = p1;
-			Assert.AreEqual(w, -1f, Epsilon);
-			Assert.AreEqual(x, -2f, Epsilon);
-			Assert.AreEqual(y, -3f, Epsilon);
-			Assert.AreEqual(z, -4f, Epsilon);
+			var (x, y, z, w) = p1;
+			Assert.AreEqual(-1f, w, Epsilon);
+			Assert.AreEqual(-2f, x, Epsilon);
+			Assert.AreEqual(-3f, y, Epsilon);
+			Assert.AreEqual(-4f, z, Epsilon);
 		}
 
 		[TestMethod]
 		public void Convert_FromOrigin()
 		{
 			Point p = Point.Origin;
-			var (w, x, y, z) = p;
-			Assert.AreEqual(w, 1f, Epsilon);
-			Assert.AreEqual(x, 0f, Epsilon);
-			Assert.AreEqual(y, 0f, Epsilon);
-			Assert.AreEqual(z, 0f, Epsilon);
+			var (x, y, z, w) = p;
+			Assert.AreEqual(1f, w, Epsilon);
+			Assert.AreEqual(0f, x, Epsilon);
+			Assert.AreEqual(0f, y, Epsilon);
+			Assert.AreEqual(0f, z, Epsilon);
 		}
 
 		[TestMethod]
@@ -294,9 +301,25 @@ namespace KleinSharp.Tests
 			var p2 = new Point(2f, 3f, 4f) / 10;
 			var t = p1 * p2;
 			var (x, y, z) = t;
-			Assert.AreEqual(x, 0f, Epsilon);
-			Assert.AreEqual(y, 0f, Epsilon);
-			Assert.AreEqual(z, 0f, Epsilon);
+			Assert.AreEqual(0f, x, Epsilon);
+			Assert.AreEqual(0f, y, Epsilon);
+			Assert.AreEqual(0f, z, Epsilon);
+		}
+
+		[TestMethod]
+		public void Divide_Points()
+		{
+			var p1 = new Point(2f, 3f, 4f);
+			var p2 = new Point(9f, 8f, 7f);
+
+			var t = p1 / p2;
+
+			// Klein-shell: (e123 + 2 e032 + 3 e013 + 4 e021) * (e123 + 9 e032 + 8 e013 + 7 e021)
+			// => 7 e01 + -5 e02 + -3 e03
+			var (x, y, z) = t;
+			Assert.AreEqual(7f, x, Epsilon);
+			Assert.AreEqual(5f, y, Epsilon);
+			Assert.AreEqual(3f, z, Epsilon);
 		}
 	}
 }

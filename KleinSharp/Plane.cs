@@ -276,14 +276,24 @@ namespace KleinSharp
 			return new Dual(0, _mm_store_ss(Detail.ext03(false, a.P0, b.P3)));
 		}
 
+		public static Point operator ^(Plane a, IdealLine b)
+		{
+			return new Point(Detail.ext02(a.P0, b.P2));
+		}
+
 		public static Plane operator |(Plane a, IdealLine b)
 		{
 			return new Plane(Detail.dotPIL(false, a.P0, b.P2));
 		}
 
-		public static Point operator ^(Plane a, IdealLine b)
+		public static float operator |(Plane a, Plane b)
 		{
-			return new Point(Detail.ext02(a.P0, b.P2));
+			return _mm_store_ss(Detail.dot00(a.P0, b.P0));
+		}
+
+		public static Plane operator |(Plane a, Line b)
+		{
+			return new Plane(Detail.dotPL(false, a.P0, b.P1, b.P2));
 		}
 
 		/// <summary>

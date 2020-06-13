@@ -28,10 +28,20 @@ namespace KleinSharp
 			P3 = p3;
 		}
 
+		/// <summary>
 		/// Component-wise constructor (homogeneous coordinate is automatically initialized to 1)
+		/// </summary>
 		public Point(float x, float y, float z)
 		{
 			P3 = _mm_set_ps(z, y, x, 1f);
+		}
+
+		/// <summary>
+		/// Component-wise constructor, with explicit homogeneous coordinate w
+		/// </summary>
+		public Point(float x, float y, float z, float w)
+		{
+			P3 = _mm_set_ps(z, y, x, w);
 		}
 
 		/// <summary>
@@ -80,7 +90,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Deconstruct the components of the point <c>w e₁₂₃ + x e₀₃₂ + y e₀₁₃ + z e₀₂₁</c>
 		/// </summary>
-		public void Deconstruct(out float w, out float x, out float y, out float z)
+		public void Deconstruct(out float x, out float y, out float z, out float w)
 		{
 			w = E123;
 			x = E032;

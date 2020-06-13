@@ -52,9 +52,9 @@ namespace KleinSharp
 
 		/// <summary>
 		/// Construct the Branch as the following multivector:
-		///
-		/// <b>a e₂₃ + b e₃₁ + c e₁₂</b>
-		///
+		/// <br/>
+		/// <c>a e₂₃ + b e₃₁ + c e₁₂</c>
+		/// <br/>
 		/// To convince yourself this is a line through the origin, remember that
 		/// such a line can be generated using the geometric product of two planes
 		/// through the origin.
@@ -197,6 +197,16 @@ namespace KleinSharp
 		public static Dual operator ^(Branch a, IdealLine b)
 		{
 			return new Dual(0, _mm_store_ss(Detail.hi_dp_ss(a.P1, b.P2)));
+		}
+
+		public static Point operator ^(Branch b, Plane a)
+		{
+			return a ^ b;
+		}
+
+		public static Dual operator ^(Branch b, Line a)
+		{
+			return a ^ b;
 		}
 
 		public bool Equals(Branch other)

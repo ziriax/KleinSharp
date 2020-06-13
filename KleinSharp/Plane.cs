@@ -265,7 +265,10 @@ namespace KleinSharp
 
 		public static Point operator ^(Plane a, Line b)
 		{
-			return new Point(Detail.ext02(a.P0, b.P2));
+			var p3 = Detail.extPB(a.P0, b.P1);
+			var tmp = Detail.ext02(a.P0, b.P2);
+			p3 = _mm_add_ps(tmp, p3);
+			return new Point(p3);
 		}
 
 		public static Dual operator ^(Plane a, Point b)

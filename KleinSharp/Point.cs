@@ -135,12 +135,15 @@ namespace KleinSharp
 		}
 
 		public float E032 => P3.GetElement(1);
+		public float E023 => -E032;
 		public float X => E032;
 
 		public float E013 => P3.GetElement(2);
+		public float E031 => -E013;
 		public float Y => E013;
 
 		public float E021 => P3.GetElement(3);
+		public float E012 => -E021;
 		public float Z => E021;
 
 		/// The homogeneous coordinate `w` is exactly $1$ when normalized.

@@ -39,11 +39,10 @@ namespace KleinSharp
 		/// <summary>
 		/// A Line is specifed by 6 coordinates which correspond to the Line's
 		/// [Plücker coordinates](https://en.wikipedia.org/wiki/Pl%C3%BCcker_coordinates).
-		/// 
+		/// <br/>
 		/// The coordinates specified in this way correspond to the following  multivector:
-		/// 
-		/// <b>a e₀₁ + b e₀₂ + c e₀₃ + d e₂₃ + e e₃₁ + f e₁₂</b>
-		/// 
+		/// <br/>
+		/// <c>a e₀₁ + b e₀₂ + c e₀₃ + d e₂₃ + e e₃₁ + f e₁₂</c>
 		/// </summary>
 		public Line(float a, float b, float c, float d, float e, float f)
 		{
@@ -336,6 +335,25 @@ namespace KleinSharp
 		{
 			return new Branch(a.P1) ^ b;
 		}
+
+		public static Dual operator ^(Line a, Line b)
+		{
+			__m128 aP1bP2 = Detail.hi_dp_ss(a.P1, b.P2);
+			__m128 bP1aP2 = Detail.hi_dp_ss(b.P1, a.P2);
+			return new Dual(0, _mm_store_ss(aP1bP2) + _mm_store_ss(bP1aP2));
+		}
+
+		public static Point operator ^(Line b, Plane a)
+		{
+			return a ^ b;
+		}
+
+		public static Dual operator ^(Line a, Branch b)
+		{
+			return new IdealLine(a.P2) ^ b;
+		}
+
+
 
 		/// <summary>
 		/// Convert the line through a branch (i.e. line parallel through the origin)

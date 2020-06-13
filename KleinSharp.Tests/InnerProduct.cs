@@ -27,10 +27,10 @@ namespace KleinSharp.Tests
 			var l1 = new Line(0f, 0f, 1f, 4f, 1f, -2f);
 
 			Plane p1l1 = p1 | l1;
-			Assert.AreEqual(-3f, p1l1.E0);
-			Assert.AreEqual(7f, p1l1.E1);
-			Assert.AreEqual(-14f, p1l1.E2);
-			Assert.AreEqual(7f, p1l1.E3);
+			Assert.AreEqual(-3f, p1l1.e0);
+			Assert.AreEqual(7f, p1l1.e1);
+			Assert.AreEqual(-14f, p1l1.e2);
+			Assert.AreEqual(7f, p1l1.e3);
 		}
 
 		[TestMethod]
@@ -43,10 +43,10 @@ namespace KleinSharp.Tests
 			var l1 = new IdealLine(-2f, 1f, 4f);
 
 			Plane p1l1 = p1 | l1;
-			Assert.AreEqual(-12f, p1l1.E0);
+			Assert.AreEqual(-12f, p1l1.e0);
 
 			Plane l1p1 = l1 | p1;
-			Assert.AreEqual(12f, l1p1.E0);
+			Assert.AreEqual(12f, l1p1.e0);
 		}
 
 		[TestMethod]
@@ -58,12 +58,12 @@ namespace KleinSharp.Tests
 			var p2 = new Point(-2f, 1f, 4f);
 
 			Line p1p2 = p1 | p2;
-			Assert.AreEqual(-5f, p1p2.E01);
-			Assert.AreEqual(10f, p1p2.E02);
-			Assert.AreEqual(-5f, p1p2.E03);
-			Assert.AreEqual(3f, p1p2.E12);
-			Assert.AreEqual(2f, p1p2.E31);
-			Assert.AreEqual(1f, p1p2.E23);
+			Assert.AreEqual(-5f, p1p2.e01);
+			Assert.AreEqual(10f, p1p2.e02);
+			Assert.AreEqual(-5f, p1p2.e03);
+			Assert.AreEqual(3f, p1p2.e12);
+			Assert.AreEqual(2f, p1p2.e31);
+			Assert.AreEqual(1f, p1p2.e23);
 		}
 
 		[TestMethod]
@@ -76,10 +76,10 @@ namespace KleinSharp.Tests
 			var l1 = new Line(0f, 0f, 1f, 4f, 1f, -2f);
 
 			Plane p1l1 = l1 | p1;
-			Assert.AreEqual(3f, p1l1.E0);
-			Assert.AreEqual(-7f, p1l1.E1);
-			Assert.AreEqual(14f, p1l1.E2);
-			Assert.AreEqual(-7f, p1l1.E3);
+			Assert.AreEqual(3f, p1l1.e0);
+			Assert.AreEqual(-7f, p1l1.e1);
+			Assert.AreEqual(14f, p1l1.e2);
+			Assert.AreEqual(-7f, p1l1.e3);
 		}
 
 		[TestMethod]
@@ -102,10 +102,10 @@ namespace KleinSharp.Tests
 			var p2 = new Point(-2f, 1f, 4f);
 
 			Plane l1p2 = l1 | p2;
-			Assert.AreEqual(0f, l1p2.E0);
-			Assert.AreEqual(-3f, l1p2.E1);
-			Assert.AreEqual(-2f, l1p2.E2);
-			Assert.AreEqual(-1f, l1p2.E3);
+			Assert.AreEqual(0f, l1p2.e0);
+			Assert.AreEqual(-3f, l1p2.e1);
+			Assert.AreEqual(-2f, l1p2.e2);
+			Assert.AreEqual(-1f, l1p2.e3);
 		}
 
 		[TestMethod]
@@ -117,12 +117,12 @@ namespace KleinSharp.Tests
 			var p2 = new Plane(1f, 2f, 3f, 4f);
 
 			Line p1p2 = p1 | p2;
-			Assert.AreEqual(-5f, p1p2.E01);
-			Assert.AreEqual(10f, p1p2.E02);
-			Assert.AreEqual(-5f, p1p2.E03);
-			Assert.AreEqual(3f, p1p2.E12);
-			Assert.AreEqual(2f, p1p2.E31);
-			Assert.AreEqual(1f, p1p2.E23);
+			Assert.AreEqual(-5f, p1p2.e01);
+			Assert.AreEqual(10f, p1p2.e02);
+			Assert.AreEqual(-5f, p1p2.e03);
+			Assert.AreEqual(3f, p1p2.e12);
+			Assert.AreEqual(2f, p1p2.e31);
+			Assert.AreEqual(1f, p1p2.e23);
 		}
 
 		[TestMethod]
@@ -133,10 +133,10 @@ namespace KleinSharp.Tests
 			// x*e_032 + y*e_013 + z*e_021 + e_123
 			var p2 = new Point(-2f, 1f, 4f);
 			Plane l1p2 = p2 | l1;
-			Assert.AreEqual(0f, l1p2.E0);
-			Assert.AreEqual(-3f, l1p2.E1);
-			Assert.AreEqual(-2f, l1p2.E2);
-			Assert.AreEqual(-1f, l1p2.E3);
+			Assert.AreEqual(0f, l1p2.e0);
+			Assert.AreEqual(-3f, l1p2.e1);
+			Assert.AreEqual(-2f, l1p2.e2);
+			Assert.AreEqual(-1f, l1p2.e3);
 		}
 
 		[TestMethod]
@@ -159,7 +159,7 @@ namespace KleinSharp.Tests
 			Line l = p2 & p3;
 			var p4 = ((l | p1) ^ l).Normalized();
 
-			Assert.AreEqual(1f, p4.E123, Epsilon);
+			Assert.AreEqual(1f, p4.e123, Epsilon);
 			Assert.AreEqual(2f, p4.X, Epsilon);
 			Assert.AreEqual(0f, p4.Y, Epsilon);
 			Assert.AreEqual(0f, p4.Z, Epsilon);

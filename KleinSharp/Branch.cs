@@ -1,15 +1,21 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
+// ReSharper disable InconsistentNaming
+// ReSharper disable ParameterHidesMember
 
 namespace KleinSharp
 {
 	/// <summary>
 	/// The `Branch` is both a line through the origin and
 	/// also the principal Branch of the logarithm of a rotor.
-	///
+	/// <br/>
+	/// It is represented as <c>a e₂₃ + b e₃₁ + c e₁₂</c>
+	/// <br/>
 	/// The rotor Branch will be most commonly constructed by taking the
 	/// logarithm of a normalized rotor. The Branch may then be linearly scaled
 	/// to adjust the "strength" of the rotor, and subsequently re-exponentiated
@@ -59,34 +65,37 @@ namespace KleinSharp
 		/// such a line can be generated using the geometric product of two planes
 		/// through the origin.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Branch(float a, float b, float c)
 		{
 			P1 = _mm_set_ps(c, b, a, 0f);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Branch(__m128 xmm)
 		{
 			P1 = xmm;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out float e23, out float e31, out float e12)
 		{
-			e23 = E23;
-			e31 = E31;
-			e12 = E12;
+			e23 = this.e23;
+			e31 = this.e31;
+			e12 = this.e12;
 		}
 
-		public float E12 => P1.GetElement(3);
-		public float E21 => -E12;
-		public float Z => E12;
+		public float e12 => P1.GetElement(3);
+		public float e21 => -e12;
+		public float Z => e12;
 
-		public float E31 => P1.GetElement(2);
-		public float E13 => -E31;
-		public float Y => E12;
+		public float e31 => P1.GetElement(2);
+		public float e13 => -e31;
+		public float Y => e12;
 
-		public float E23 => P1.GetElement(1);
-		public float E32 => -E23;
-		public float X => E23;
+		public float e23 => P1.GetElement(1);
+		public float e32 => -e23;
+		public float X => e23;
 
 		/// <summary>
 		/// If a line is constructed as the regressive product (join) of
@@ -103,6 +112,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Returns the square root of the quantity produced by `squared_norm`.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public float Norm()
 		{
 			return MathF.Sqrt(SquaredNorm());
@@ -114,6 +124,7 @@ namespace KleinSharp
 			return _mm_mul_ps(p, inv);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Branch Normalized() => new Branch(Normalized(P1));
 
 		public static __m128 Inverse(__m128 p)
@@ -125,6 +136,7 @@ namespace KleinSharp
 			return p;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Branch Inverse() => new Branch(Inverse(P1));
 
 		public Rotor Sqrt()
@@ -147,21 +159,73 @@ namespace KleinSharp
 			return new Rotor(p1);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Branch operator +(Branch a, Branch b)
 		{
 			return new Branch(_mm_add_ps(a.P1, b.P1));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator +(Branch a, Line b)
+		{
+			return new Line(_mm_add_ps(a.P1, b.P1), b.P2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator +(Line a, Branch b)
+		{
+			return new Line(_mm_add_ps(a.P1, b.P1), a.P2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator +(Branch a, IdealLine b)
+		{
+			return new Line(a.P1, b.P2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator +(IdealLine a, Branch b)
+		{
+			return new Line(b.P1, a.P2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Branch operator -(Branch a, Branch b)
 		{
 			return new Branch(_mm_sub_ps(a.P1, b.P1));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator -(Branch a, Line b)
+		{
+			return new Line(_mm_sub_ps(a.P1, b.P1), b.P2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator -(Line a, Branch b)
+		{
+			return new Line(_mm_sub_ps(a.P1, b.P1), a.P2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator -(Branch a, IdealLine b)
+		{
+			return new Line(a.P1, b.P2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator -(IdealLine a, Branch b)
+		{
+			return new Line(b.P1, a.P2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Branch operator *(Branch b, float s)
 		{
 			return new Branch(_mm_mul_ps(b.P1, _mm_set1_ps(s)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Branch operator *(float s, Branch b)
 		{
 			return new Branch(_mm_mul_ps(b.P1, _mm_set1_ps(s)));
@@ -172,6 +236,7 @@ namespace KleinSharp
 			return new Branch(_mm_mul_ps(b.P1, Detail.rcp_nr1(_mm_set1_ps(s))));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Branch operator -(Branch b)
 		{
 			return new Branch(_mm_xor_ps(b.P1, _mm_set1_ps(-0f)));
@@ -180,6 +245,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Reversion operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Branch operator ~(Branch b)
 		{
 			__m128 flip = _mm_set_ps(-0f, -0f, -0f, 0f);
@@ -189,6 +255,7 @@ namespace KleinSharp
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IdealLine operator !(Branch b)
 		{
 			return new IdealLine(b.P1);
@@ -199,11 +266,13 @@ namespace KleinSharp
 			return new Dual(0, _mm_store_ss(Detail.hi_dp_ss(a.P1, b.P2)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator ^(Branch b, Plane a)
 		{
 			return a ^ b;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator ^(Branch b, Line a)
 		{
 			return a ^ b;
@@ -234,9 +303,18 @@ namespace KleinSharp
 			return !left.Equals(right);
 		}
 
+		public static implicit operator Line(Branch b)
+		{
+			return new Line(b);
+		}
+
 		public override string ToString()
 		{
-			return $"Branch({E12} e12 + {E31} e31 + {E23} e23)";
+			return new StringBuilder(64)
+				.AppendElement(e12, "e₁₂")
+				.AppendElement(e31, "e₃₁")
+				.AppendElement(e23, "e₂₃")
+				.ZeroWhenEmpty();
 		}
 	}
 }

@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
+// ReSharper disable ParameterHidesMember
+// ReSharper disable InconsistentNaming
 
 namespace KleinSharp
 {
@@ -77,6 +80,7 @@ namespace KleinSharp
 		/// <br/>
 		/// <c>a + be₂₃ + ce₃₁ + de₁₂ + ee₀₁ + fe₀₂ + ge₀₃ + he₀₁₂₃</c>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Motor(float a, float b, float c, float d, float e, float f, float g, float h)
 		{
 			P1 = _mm_set_ps(d, c, b, a);
@@ -93,6 +97,7 @@ namespace KleinSharp
 			Detail.exp(p1, p2, out P1, out P2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Motor(__m128 p1, __m128 p2)
 		{
 			P1 = p1;
@@ -101,6 +106,7 @@ namespace KleinSharp
 
 		/// Load Motor data using two unaligned loads. This routine does *not*
 		/// assume the data passed in this way is normalized.
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe Motor(float* input)
 		{
 			// Aligned and unaligned loads incur the same amount of latency and have
@@ -112,6 +118,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Store the 8 float components into memory
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe void Store(float* data)
 		{
 			_mm_storeu_ps(data, P1);
@@ -134,33 +141,35 @@ namespace KleinSharp
 		}
 
 		public float Scalar => P1.GetElement(0);
-		public float E12 => P1.GetElement(3);
-		public float E21 => -E12;
-		public float E31 => P1.GetElement(2);
-		public float E13 => -E31;
-		public float E23 => P1.GetElement(1);
-		public float E32 => -E23;
-		public float E01 => P2.GetElement(1);
-		public float E10 => -E01;
-		public float E02 => P2.GetElement(2);
-		public float E20 => -E02;
-		public float E03 => P2.GetElement(3);
-		public float E30 => -E03;
-		public float E0123 => P2.GetElement(0);
+		public float e12 => P1.GetElement(3);
+		public float e21 => -e12;
+		public float e31 => P1.GetElement(2);
+		public float e13 => -e31;
+		public float e23 => P1.GetElement(1);
+		public float e32 => -e23;
+		public float e01 => P2.GetElement(1);
+		public float e10 => -e01;
+		public float e02 => P2.GetElement(2);
+		public float e20 => -e02;
+		public float e03 => P2.GetElement(3);
+		public float e30 => -e03;
+		public float e0123 => P2.GetElement(0);
+		public float I => e0123;
 
 		/// <summary>
 		/// Deconstructs the components of the motor <c>a + be₂₃ + ce₃₁ + de₁₂ + ee₀₁ + fe₀₂ + ge₀₃ + he₀₁₂₃</c>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out float a, out float b, out float c, out float d, out float e, out float f, out float g, out float h)
 		{
 			a = Scalar;
-			b = E23;
-			c = E31;
-			d = E12;
-			e = E01;
-			f = E02;
-			g = E03;
-			h = E0123;
+			b = e23;
+			c = e31;
+			d = e12;
+			e = e01;
+			f = e02;
+			g = e03;
+			h = e0123;
 		}
 
 		/// Normalizes this Motor $m$ such that $m\widetilde{m} = 1$.
@@ -202,6 +211,7 @@ namespace KleinSharp
 		}
 
 		/// Return a normalized copy of this Motor.
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Motor Normalized()
 		{
 			var (p1, p2) = Normalized(P1, P2);
@@ -234,6 +244,7 @@ namespace KleinSharp
 			return (p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Motor Inverse()
 		{
 			var (p1, p2) = Inverse(P1, P2);
@@ -249,6 +260,7 @@ namespace KleinSharp
 			return (p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Motor Constrained()
 		{
 			var (p1, p2) = Constrained(P1, P2);
@@ -286,6 +298,7 @@ namespace KleinSharp
 			return new Motor(_mm_set_ss(1f), t.P2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator +(Motor a, Motor b)
 		{
 			var p1 = _mm_add_ps(a.P1, b.P1);
@@ -293,6 +306,7 @@ namespace KleinSharp
 			return new Motor(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator -(Motor a, Motor b)
 		{
 			var p1 = _mm_sub_ps(a.P1, b.P1);
@@ -300,6 +314,7 @@ namespace KleinSharp
 			return new Motor(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator *(Motor l, float s)
 		{
 			__m128 vs = _mm_set1_ps(s);
@@ -308,6 +323,7 @@ namespace KleinSharp
 			return new Motor(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator *(float s, Motor l)
 		{
 			return l * s;
@@ -321,6 +337,7 @@ namespace KleinSharp
 			return new Motor(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator -(Motor m)
 		{
 			__m128 flip = _mm_set1_ps(-0f);
@@ -330,6 +347,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Reversion operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator ~(Motor m)
 		{
 			__m128 flip = _mm_set_ps(-0f, -0f, -0f, 0f);

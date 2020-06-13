@@ -57,11 +57,33 @@ namespace KleinSharp.Tests
 		}
 
 		[TestMethod]
-		public void Deconstructs_WXYZ()
+		public void Deconstructs_XYZW()
 		{
 			var p1 = new Point(2f, 3f, 4f);
 			var (x, y, z, w) = p1;
 			Assert.AreEqual((1f, 2f, 3f, 4f), (w, x, y, z));
+		}
+
+		[TestMethod]
+		public void Aliases_Properties()
+		{
+			var p = new Point(1f, 2f, 3f, 4f);
+
+			Assert.AreEqual(1f, p.e032);
+			Assert.AreEqual(1f, p.E1);
+			Assert.AreEqual(1f, p.X);
+
+			Assert.AreEqual(2f, p.e013);
+			Assert.AreEqual(2f, p.E2);
+			Assert.AreEqual(2f, p.Y);
+
+			Assert.AreEqual(3f, p.e021);
+			Assert.AreEqual(3f, p.E3);
+			Assert.AreEqual(3f, p.Z);
+
+			Assert.AreEqual(4f, p.e123);
+			Assert.AreEqual(4f, p.E0);
+			Assert.AreEqual(4f, p.W);
 		}
 
 		[TestMethod]
@@ -106,10 +128,10 @@ namespace KleinSharp.Tests
 			Assert.AreEqual(4f, p1.Z);
 			Assert.AreEqual(1f, p1.W);
 
-			Assert.AreEqual(2f, p1.E032);
-			Assert.AreEqual(3f, p1.E013);
-			Assert.AreEqual(4f, p1.E021);
-			Assert.AreEqual(1f, p1.E123);
+			Assert.AreEqual(2f, p1.e032);
+			Assert.AreEqual(3f, p1.e013);
+			Assert.AreEqual(4f, p1.e021);
+			Assert.AreEqual(1f, p1.e123);
 		}
 
 		[TestMethod]

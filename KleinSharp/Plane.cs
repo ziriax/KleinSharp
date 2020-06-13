@@ -6,6 +6,8 @@ using System.Runtime.Intrinsics.X86;
 using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
+// ReSharper disable ParameterHidesMember
+// ReSharper disable InconsistentNaming
 
 namespace KleinSharp
 {
@@ -35,6 +37,7 @@ namespace KleinSharp
 	{
 		public readonly __m128 P0;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Plane(__m128 p0)
 		{
 			P0 = p0;
@@ -44,6 +47,7 @@ namespace KleinSharp
 		/// The constructor performs the rearrangement so the Plane
 		/// can be specified in the familiar form: ax + by + cz + d
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Plane(float a, float b, float c, float d)
 		{
 			P0 = _mm_set_ps(c, b, a, d);
@@ -53,6 +57,7 @@ namespace KleinSharp
 		/// Data should point to four floats with memory layout `(d, a, b, c)` where
 		/// `d` occupies the lowest address in memory.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe Plane(float* data)
 		{
 			P0 = _mm_loadu_ps(data);
@@ -72,6 +77,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Store the 4 float components to memory
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe void Store(float* data) => _mm_storeu_ps(data, P0);
 
 		/// <summary>
@@ -89,14 +95,15 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Deconstructs the components of the plane <c>d e₀ +a e₁ +b e₂ +c e₃</c>
+		/// Deconstructs the components <c>(a,b,c,d)</c> of the plane <c>a e₁ + b e₂ +c e₃ + d e₀</c>
 		/// </summary>
-		public void Deconstruct(out float d, out float a, out float b, out float c)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Deconstruct(out float a, out float b, out float c, out float d)
 		{
-			d = E0;
-			a = E1;
-			b = E2;
-			c = E3;
+			a = e1;
+			b = e2;
+			c = e3;
+			d = e0;
 		}
 
 		/// <summary>
@@ -126,6 +133,7 @@ namespace KleinSharp
 		/// $P\vee\ell$ containing both $\ell$ and $P$ will have a norm equivalent
 		/// to the distance between $P$ and $\ell$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public float Norm()
 		{
 			return _mm_store_ss(Detail.sqrt_nr1(Detail.hi_dp(P0, P0)));
@@ -198,38 +206,42 @@ namespace KleinSharp
 		/// </summary>
 		public Point this[Point p] => Reflect(p);
 
-		public float X => P0.GetElement(1);
+		public float e1 => P0.GetElement(1);
+		public float X => e1;
 		public float A => X;
-		public float E1 => X;
 
-		public float Y => P0.GetElement(2);
+		public float e2 => P0.GetElement(2);
+		public float Y => e2;
 		public float B => Y;
-		public float E2 => Y;
 
-		public float Z => P0.GetElement(3);
+		public float e3 => P0.GetElement(3);
+		public float Z => e3;
 		public float C => Z;
-		public float E3 => Z;
 
-		public float W => P0.GetElement(0);
+		public float e0 => P0.GetElement(0);
+		public float W => e0;
 		public float D => W;
-		public float E0 => W;
 
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator +(Plane a, Plane b)
 		{
 			return new Plane(_mm_add_ps(a.P0, b.P0));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator -(Plane a, Plane b)
 		{
 			return new Plane(_mm_sub_ps(a.P0, b.P0));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator *(Plane p, float s)
 		{
 			return new Plane(_mm_mul_ps(p.P0, _mm_set1_ps(s)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator *(float s, Plane p)
 		{
 			return p * s;
@@ -241,6 +253,7 @@ namespace KleinSharp
 		}
 
 		/// Unary minus (leaves displacement from origin untouched, changing orientation only)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator -(Plane p)
 		{
 			return new Plane(_mm_xor_ps(p.P0, _mm_set_ps(-0f, -0f, -0f, 0f)));
@@ -342,7 +355,7 @@ namespace KleinSharp
 
 		public override string ToString()
 		{
-			var (d, a, b, c) = this;
+			var (a, b, c, d) = this;
 
 			return new StringBuilder(64)
 				.AppendElement(d, "e₀")

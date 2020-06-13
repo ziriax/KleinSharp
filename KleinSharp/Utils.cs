@@ -26,23 +26,23 @@ namespace KleinSharp
 			return sb;
 		}
 
-		public static StringBuilder AppendElement(this StringBuilder sb, float scale, string element)
+		public static StringBuilder AppendElement(this StringBuilder sb, float component, string element)
 		{
-			if (scale < 0)
+			if (component < 0)
 			{
 				sb.Append(" - ");
-				scale = -scale;
+				component = -component;
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (scale != 1) sb.Append(scale);
+				if (component != 1) sb.Append(component);
 				sb.Append(element);
 				return sb;
 			}
 
-			if (scale > 0)
+			if (component > 0)
 			{
 				sb.Append(" + ");
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (scale != 1) sb.Append(scale);
+				if (component != 1) sb.Append(component);
 				sb.Append(element);
 				return sb;
 			}

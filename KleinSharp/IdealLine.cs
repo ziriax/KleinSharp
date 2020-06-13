@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
+// ReSharper disable InconsistentNaming
+// ReSharper disable ParameterHidesMember
 
 namespace KleinSharp
 {
@@ -28,21 +32,24 @@ namespace KleinSharp
 	{
 		public readonly __m128 P2;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IdealLine(float a, float b, float c)
 		{
 			P2 = _mm_set_ps(c, b, a, 0f);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal IdealLine(__m128 abc)
 		{
 			P2 = abc;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out float e01, out float e02, out float e03)
 		{
-			e01 = E01;
-			e02 = E02;
-			e03 = E03;
+			e01 = this.e01;
+			e02 = this.e02;
+			e03 = this.e03;
 		}
 
 		public float SquaredIdealNorm()
@@ -51,26 +58,55 @@ namespace KleinSharp
 			return _mm_store_ss(dp);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public float IdealNorm()
 		{
 			return MathF.Sqrt(SquaredIdealNorm());
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IdealLine operator +(IdealLine a, IdealLine b)
 		{
 			return new IdealLine(_mm_add_ps(a.P2, b.P2));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator +(IdealLine a, Line b)
+		{
+			return new Line(b.P1, _mm_add_ps(a.P2, b.P2));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator +(Line a, IdealLine b)
+		{
+			return new Line(a.P1, _mm_add_ps(a.P2, b.P2));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IdealLine operator -(IdealLine a, IdealLine b)
 		{
 			return new IdealLine(_mm_sub_ps(a.P2, b.P2));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator -(IdealLine a, Line b)
+		{
+			return new Line(b.P1, _mm_sub_ps(a.P2, b.P2));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Line operator -(Line a, IdealLine b)
+		{
+			return new Line(a.P1, _mm_sub_ps(a.P2, b.P2));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IdealLine operator *(IdealLine a, float s)
 		{
 			return new IdealLine(_mm_mul_ps(a.P2, _mm_set1_ps(s)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IdealLine operator *(float s, IdealLine a)
 		{
 			return new IdealLine(_mm_mul_ps(a.P2, _mm_set1_ps(s)));
@@ -81,6 +117,7 @@ namespace KleinSharp
 			return new IdealLine(_mm_mul_ps(a.P2, Detail.rcp_nr1(_mm_set1_ps(s))));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IdealLine operator -(IdealLine l)
 		{
 			return new IdealLine(_mm_xor_ps(l.P2, _mm_set1_ps(-0f)));
@@ -89,6 +126,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Reversion operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IdealLine operator ~(IdealLine l)
 		{
 			__m128 flip = _mm_set_ps(-0f, -0f, -0f, 0f);
@@ -98,6 +136,7 @@ namespace KleinSharp
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Branch operator !(IdealLine l)
 		{
 			return new Branch(l.P2);
@@ -108,12 +147,13 @@ namespace KleinSharp
 		/// </summary>
 		public static Plane operator |(IdealLine b, Plane a)
 		{
-			return new Plane(Detail.dotPIL(true , a.P0, b.P2));
+			return new Plane(Detail.dotPIL(true, a.P0, b.P2));
 		}
 
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator ^(IdealLine b, Plane a)
 		{
 			return a ^ b;
@@ -122,6 +162,7 @@ namespace KleinSharp
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator ^(IdealLine b, Branch a)
 		{
 			return a ^ b;
@@ -130,6 +171,7 @@ namespace KleinSharp
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator ^(IdealLine b, Line a)
 		{
 			return a ^ b;
@@ -138,24 +180,34 @@ namespace KleinSharp
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator &(IdealLine b, Point a)
 		{
 			return a & b;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator Line(IdealLine l)
+		{
+			return new Line(l);
+		}
 
-		public float E01 => P2.GetElement(1);
-		public float E10 => -E01;
+		public float e01 => P2.GetElement(1);
+		public float e10 => -e01;
 
-		public float E02 => P2.GetElement(2);
-		public float E20 => -E02;
+		public float e02 => P2.GetElement(2);
+		public float e20 => -e02;
 
-		public float E03 => P2.GetElement(3);
-		public float E30 => -E03;
+		public float e03 => P2.GetElement(3);
+		public float e30 => -e03;
 
 		public override string ToString()
 		{
-			return $"IdealLine({E01} e₀₁ + {E02} e₀₂ + {E03} e₀₃)";
+			return new StringBuilder(64)
+				.AppendElement(e01, "e₀₁")
+				.AppendElement(e02, "e₀₂")
+				.AppendElement(e03, "e₀₃")
+				.ZeroWhenEmpty();
 		}
 	}
 }

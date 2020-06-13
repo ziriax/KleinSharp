@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
+// ReSharper disable InconsistentNaming
 
 namespace KleinSharp
 {
@@ -27,10 +28,6 @@ namespace KleinSharp
 			__m128 dir = _mm_set_ps(z, y, x, 0f);
 			__m128 tmp = Detail.rsqrt_nr1(Detail.hi_dp_bc(dir, dir));
 			P3 = _mm_mul_ps(dir, tmp);
-		}
-
-		public Direction(Vector3 v) : this(v.X, v.Y, v.Z)
-		{
 		}
 
 		/// <summary>
@@ -58,11 +55,21 @@ namespace KleinSharp
 			z = Z;
 		}
 
-		public float X => P3.GetElement(1);
+		public float E1 => P3.GetElement(1);
+		public float X => E1;
+		public float e032 => E1;
+		public float e023 => -E1;
 
-		public float Y => P3.GetElement(2);
+		public float E2 => P3.GetElement(2);
+		public float Y => E2;
+		public float e013 => E2;
+		public float e031 => -E2;
 
-		public float Z => P3.GetElement(3);
+		public float E3 => P3.GetElement(3);
+		public float Z => E3;
+		public float e0=> E2;
+		public float e021 => E3;
+		public float e012 => -E3;
 
 		/// Return a normalized direction by dividing all components by the
 		/// magnitude (for speed, `rsqrtps` is used with a single Newton-Raphson refinement iteration)
@@ -73,21 +80,49 @@ namespace KleinSharp
 			return new Direction(_mm_mul_ps(P3, tmp));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Direction operator +(Direction a, Direction b)
 		{
 			return new Direction(_mm_add_ps(a.P3, b.P3));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Point operator +(Point a, Direction b)
+		{
+			return new Point(_mm_add_ps(a.P3, b.P3));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Point operator +(Direction a, Point b)
+		{
+			return new Point(_mm_add_ps(a.P3, b.P3));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Direction operator -(Direction a, Direction b)
 		{
 			return new Direction(_mm_sub_ps(a.P3, b.P3));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Point operator -(Point a, Direction b)
+		{
+			return new Point(_mm_sub_ps(a.P3, b.P3));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Point operator -(Direction a, Point b)
+		{
+			return new Point(_mm_sub_ps(a.P3, b.P3));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Direction operator *(Direction a, float s)
 		{
 			return new Direction(_mm_mul_ps(a.P3, _mm_set1_ps(s)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Direction operator *(float s, Direction a)
 		{
 			return new Direction(_mm_mul_ps(a.P3, _mm_set1_ps(s)));
@@ -98,10 +133,10 @@ namespace KleinSharp
 			return new Direction(_mm_mul_ps(a.P3, Detail.rcp_nr1(_mm_set1_ps(s))));
 		}
 
-		public static implicit operator Vector3(in Direction a)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator Point(Direction d)
 		{
-			// TODO: This is slow! .NET Core 5 provides a method for this.
-			return new Vector3(a.X, a.Y, a.Z);
+			return new Point(d.P3);
 		}
 
 		public bool Equals(Direction other)
@@ -131,19 +166,11 @@ namespace KleinSharp
 
 		public override string ToString()
 		{
-			// TODO: Show units, e.g. e₀₁₂ e₀₂₃ e₀₁₃
-			// [PV] Learning PGA myself, need to get the signs right below
-			// e₁ <=> plane x=0 <=> yz plane
-			// e₂ <=> plane y=0 <=> zx plane
-			// e₃ <=> plane z=0 <=> xy plane
-			// e₀ <=> plane w=0 <=> ideal "sphere at infinity"
-			// e₁₂ <=> z axis
-			// e₂₃ <=> x axis
-			// e₃₁ <=> y axis
-			// e₀₁₂ <=> z direction
-			// e₀₂₃ <=> x direction
-			// e₀₃₁ <=> y direction
-			return $"Direction({X}, {Y}, {Z})";
+			return new StringBuilder(64)
+				.AppendElement(X, "E₁")
+				.AppendElement(Y, "E₂")
+				.AppendElement(Z, "E₃")
+				.ZeroWhenEmpty();
 		}
 	}
 }

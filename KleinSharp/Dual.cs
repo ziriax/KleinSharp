@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
+
+// ReSharper disable InconsistentNaming
 
 namespace KleinSharp
 {
@@ -25,33 +29,39 @@ namespace KleinSharp
 		}
 
 		public float Scalar => P;
-		public float E0123 => Q;
+		public float e0123 => Q;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator +(Dual a, Dual b)
 		{
 			return new Dual(a.P + b.P, a.Q + b.Q);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator -(Dual a, Dual b)
 		{
 			return new Dual(a.P - b.P, a.Q - b.Q);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator *(Dual a, float s)
 		{
 			return new Dual(a.P * s, a.Q * s);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator *(float s, Dual a)
 		{
 			return new Dual(a.P * s, a.Q * s);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator /(Dual a, float s)
 		{
 			return new Dual(a.P / s, a.Q / s);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator !(Dual d)
 		{
 			return new Dual(d.Q, d.P);
@@ -84,7 +94,10 @@ namespace KleinSharp
 
 		public override string ToString()
 		{
-			return $"Dual({P} + {Q} e₀₁₂₃)";
+			return new StringBuilder(64)
+				.AppendScalar(P)
+				.AppendElement(Q, "e₀₁₂₃)")
+				.ZeroWhenEmpty();
 		}
 	}
 }

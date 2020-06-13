@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
+// ReSharper disable ParameterHidesMember
+// ReSharper disable InconsistentNaming
 
 namespace KleinSharp
 {
@@ -88,6 +91,7 @@ namespace KleinSharp
 				cos_r * cos_p * cos_y + sin_r * sin_p * sin_y);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Rotor(__m128 p1)
 		{
 			P1 = p1;
@@ -121,6 +125,7 @@ namespace KleinSharp
 		/// <br/>
 		/// That is, the rotor <c>r</c> must satisfy <c>r ~r = 1</c>.
 		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe Rotor(float* data)
 		{
 			P1 = _mm_loadu_ps(data);
@@ -129,6 +134,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Store the 4 float components in memory
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe void Store(float* data) => _mm_storeu_ps(data, P1);
 
 		/// <summary>
@@ -148,12 +154,13 @@ namespace KleinSharp
 		/// <summary>
 		/// Deconstructs the components of the rotor <c>a + be₂₃ + ce₃₁ + de₁₂</c>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out float a, out float b, out float c, out float d)
 		{
 			a = Scalar;
-			b = E23;
-			c = E31;
-			d = E12;
+			b = e23;
+			c = e31;
+			d = e12;
 		}
 
 		/// <summary>
@@ -162,6 +169,7 @@ namespace KleinSharp
 		/// <remarks>
 		/// Normalizes a rotor <c>r</c> such that <c>r ~r = 1</c>.
 		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Rotor Normalized()
 		{
 			// A Rotor is normalized if r * ~r is unity.
@@ -182,6 +190,7 @@ namespace KleinSharp
 			return _mm_xor_ps(_mm_set_ps(-0f, -0f, -0f, 0f), p1);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Rotor Inverse()
 		{
 			return new Rotor(Inverse(P1));
@@ -378,18 +387,19 @@ namespace KleinSharp
 
 		public float Scalar => P1.GetElement(0);
 
-		public float E23 => P1.GetElement(1);
-		public float E32 => -E23;
+		public float e23 => P1.GetElement(1);
+		public float e32 => -e23;
 
-		public float E31 => P1.GetElement(2);
-		public float E13 => -E31;
+		public float e31 => P1.GetElement(2);
+		public float e13 => -e31;
 
-		public float E12 => P1.GetElement(3);
-		public float E21 => -E12;
+		public float e12 => P1.GetElement(3);
+		public float e21 => -e12;
 
 		/// <summary>
 		/// Compute the square root of the provided rotor $r$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Rotor Sqrt()
 		{
 			return new Rotor(Normalized(_mm_add_ss(P1, _mm_set_ss(1f))));
@@ -420,21 +430,25 @@ namespace KleinSharp
 			return new Branch(p1);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Rotor operator +(Rotor a, Rotor b)
 		{
 			return new Rotor(_mm_add_ps(a.P1, b.P1));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Rotor operator -(Rotor a, Rotor b)
 		{
 			return new Rotor(_mm_sub_ps(a.P1, b.P1));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Rotor operator *(Rotor r, float s)
 		{
 			return new Rotor(_mm_mul_ps(r.P1, _mm_set1_ps(s)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Rotor operator *(float s, Rotor r)
 		{
 			return r * s;
@@ -448,12 +462,14 @@ namespace KleinSharp
 		/// <summary>
 		/// Reversion operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Rotor operator ~(Rotor r)
 		{
 			__m128 flip = _mm_set_ps(-0f, -0f, -0f, 0f);
 			return new Rotor(_mm_xor_ps(r.P1, flip));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Rotor operator -(Rotor r)
 		{
 			return new Rotor(_mm_xor_ps(r.P1, _mm_set1_ps(-0f)));

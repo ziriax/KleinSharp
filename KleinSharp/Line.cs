@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
+// ReSharper disable ParameterHidesMember
+// ReSharper disable InconsistentNaming
 
 namespace KleinSharp
 {
@@ -37,43 +37,49 @@ namespace KleinSharp
 		public readonly __m128 P2;
 
 		/// <summary>
-		/// A Line is specifed by 6 coordinates which correspond to the Line's
+		/// A Line is specified by 6 coordinates which correspond to the Line's
 		/// [Plücker coordinates](https://en.wikipedia.org/wiki/Pl%C3%BCcker_coordinates).
 		/// <br/>
 		/// The coordinates specified in this way correspond to the following  multivector:
 		/// <br/>
 		/// <c>a e₀₁ + b e₀₂ + c e₀₃ + d e₂₃ + e e₃₁ + f e₁₂</c>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Line(float a, float b, float c, float d, float e, float f)
 		{
 			P1 = _mm_set_ps(f, e, d, 0f);
 			P2 = _mm_set_ps(c, b, a, 0f);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Line(__m128 p2)
 		{
 			P1 = default;
 			P2 = p2;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Line(__m128 p1, __m128 p2)
 		{
 			P1 = p1;
 			P2 = p2;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Line(IdealLine other)
 		{
 			P1 = _mm_setzero_ps();
 			P2 = other.P2;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Line(Branch other)
 		{
 			P1 = other.P1;
 			P2 = _mm_setzero_ps();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe Line(__m128* p1p2)
 		{
 			P1 = p1p2[0];
@@ -107,14 +113,15 @@ namespace KleinSharp
 		/// <summary>
 		/// Deconstructs the components of the line <c>a e₀₁ + b e₀₂ + c e₀₃ + d e₂₃ + e e₃₁ + f e₁₂</c>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out float a, out float b, out float c, out float d, out float e, out float f)
 		{
-			a = E01;
-			b = E02;
-			c = E03;
-			d = E23;
-			e = E31;
-			f = E12;
+			a = e01;
+			b = e02;
+			c = e03;
+			d = e23;
+			e = e31;
+			f = e12;
 		}
 
 		/// <summary>
@@ -122,6 +129,7 @@ namespace KleinSharp
 		/// p1: (1, e12, e31, e23)
 		/// p2: (e0123, e01, e02, e03)
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out __m128 p1, out __m128 p2)
 		{
 			p1 = P1;
@@ -131,6 +139,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Returns the square root of the quantity produced by `squared_norm`.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public float Norm()
 		{
 			return MathF.Sqrt(SquaredNorm());
@@ -203,29 +212,30 @@ namespace KleinSharp
 			return (p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Line Inverse()
 		{
 			var (p1, p2) = Inverse(P1, P2);
 			return new Line(p1, p2);
 		}
 
-		public float E23 => P1.GetElement(1);
-		public float E32 => -E23;
+		public float e23 => P1.GetElement(1);
+		public float e32 => -e23;
 
-		public float E31 => P1.GetElement(2);
-		public float E13 => -E31;
+		public float e31 => P1.GetElement(2);
+		public float e13 => -e31;
 
-		public float E12 => P1.GetElement(3);
-		public float E21 => E12;
+		public float e12 => P1.GetElement(3);
+		public float e21 => e12;
 
-		public float E01 => P2.GetElement(1);
-		public float E10 => -E01;
+		public float e01 => P2.GetElement(1);
+		public float e10 => -e01;
 
-		public float E02 => P2.GetElement(2);
-		public float E20 => -E02;
+		public float e02 => P2.GetElement(2);
+		public float e20 => -e02;
 
-		public float E03 => P2.GetElement(3);
-		public float E30 => -E03;
+		public float e03 => P2.GetElement(3);
+		public float e30 => -e03;
 
 		/// <summary>
 		/// Approximate equality test
@@ -266,6 +276,7 @@ namespace KleinSharp
 			return !left.Equals(right);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator +(in Line a, in Line b)
 		{
 			var p1 = _mm_add_ps(a.P1, b.P1);
@@ -273,6 +284,7 @@ namespace KleinSharp
 			return new Line(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator -(in Line a, in Line b)
 		{
 			var p1 = _mm_sub_ps(a.P1, b.P1);
@@ -280,6 +292,7 @@ namespace KleinSharp
 			return new Line(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator *(in Line l, float s)
 		{
 			__m128 vs = _mm_set1_ps(s);
@@ -288,6 +301,7 @@ namespace KleinSharp
 			return new Line(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator *(float s, in Line l)
 		{
 			return l * s;
@@ -301,6 +315,7 @@ namespace KleinSharp
 			return new Line(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator -(in Line l)
 		{
 			__m128 flip = _mm_set1_ps(-0f);
@@ -312,6 +327,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Reversion operator
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator ~(in Line l)
 		{
 			__m128 flip = _mm_set_ps(-0f, -0f, -0f, 0f);
@@ -323,6 +339,7 @@ namespace KleinSharp
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator !(in Line l)
 		{
 			return new Line(l.P2, l.P1);
@@ -331,6 +348,7 @@ namespace KleinSharp
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator ^(Line a, IdealLine b)
 		{
 			return new Branch(a.P1) ^ b;
@@ -343,11 +361,13 @@ namespace KleinSharp
 			return new Dual(0, _mm_store_ss(aP1bP2) + _mm_store_ss(bP1aP2));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator ^(Line b, Plane a)
 		{
 			return a ^ b;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator ^(Line a, Branch b)
 		{
 			return new IdealLine(a.P2) ^ b;
@@ -363,17 +383,17 @@ namespace KleinSharp
 			return _mm_store_ss(Detail.dot11(a.P1, b.P1));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator |(Line b, Point a)
 		{
 			return a | b;
 		}
 
-
-
 		/// <summary>
 		/// Convert the line through a branch (i.e. line parallel through the origin)
 		/// TODO: Check if this is correct! Klein C++ doesn't have this.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static explicit operator Branch(in Line l)
 		{
 			return new Branch(l.P1);
@@ -381,7 +401,7 @@ namespace KleinSharp
 
 		/// <summary>
 		/// Formats the line to the string <c>a e₀₁ + b e₀₂ + c e₀₃ + d e₂₃ + e e₃₁ + f e₁₂</c>,
-		/// dropping elements that have zero coefficients.
+		/// dropping elements that have zero components.
 		/// </summary>
 		public override string ToString()
 		{

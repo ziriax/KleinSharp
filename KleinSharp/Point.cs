@@ -5,11 +5,17 @@ using System.Runtime.Intrinsics;
 using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
+// ReSharper disable InconsistentNaming
 
 namespace KleinSharp
 {
 	/// <summary>
-	/// A Point is represented as the multivector <c>e₁₂₃ + x e₀₃₂ + y e₀₁₃ + z e₀₂₁</c>
+	/// A homogeneous point (x,y,z,w) is represented as the multivector <c>x e₀₃₂ + y e₀₁₃ + z e₀₂₁ + w e₁₂₃</c>.
+	/// <br/>
+	/// For convenience, the point basis is often defined as:
+	/// <c>E₁ = e₀₃₂, E₂ = y e₀₁₃, E₃ = e₀₂₁, E₀ = e₁₂₃</c>
+	/// <br/>
+	/// Then a homogeneous point (x,y,z,w) is easier represented as <c>x E₁ + y E₂ + z E₃ + w E₀</c>
 	/// <br/>
 	/// The Point has a trivector representation because it is the
 	/// fixed point of 3 planar reflections (each of which is a grade-1 multivector).
@@ -82,9 +88,9 @@ namespace KleinSharp
 		/// </summary>
 		public void Deconstruct(out float x, out float y, out float z)
 		{
-			x = E032;
-			y = E013;
-			z = E021;
+			x = e032;
+			y = e013;
+			z = e021;
 		}
 
 		/// <summary>
@@ -92,10 +98,10 @@ namespace KleinSharp
 		/// </summary>
 		public void Deconstruct(out float x, out float y, out float z, out float w)
 		{
-			w = E123;
-			x = E032;
-			y = E013;
-			z = E021;
+			x = e032;
+			y = e013;
+			z = e021;
+			w = e123;
 		}
 
 		/// <summary>
@@ -118,7 +124,7 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Return a normalized copy of this Point, so that the coefficient of e₁₂₃ becomes 1.
+		/// Return a normalized copy of this Point, so that the component of e₁₂₃ becomes 1.
 		/// </summary>
 		/// <remarks>
 		/// Division is done via rcpps with an additional Newton-Raphson refinement.
@@ -144,21 +150,25 @@ namespace KleinSharp
 			return new Point(p3);
 		}
 
-		public float E032 => P3.GetElement(1);
-		public float E023 => -E032;
-		public float X => E032;
+		public float e032 => P3.GetElement(1);
+		public float e023 => -e032;
+		public float E1 => e032;
+		public float X => e032;
 
-		public float E013 => P3.GetElement(2);
-		public float E031 => -E013;
-		public float Y => E013;
+		public float e013 => P3.GetElement(2);
+		public float e031 => -e013;
+		public float E2 => e013;
+		public float Y => e013;
 
-		public float E021 => P3.GetElement(3);
-		public float E012 => -E021;
-		public float Z => E021;
+		public float e021 => P3.GetElement(3);
+		public float e012 => -e021;
+		public float E3 => e021;
+		public float Z => e021;
 
 		/// The homogeneous coordinate `w` is exactly $1$ when normalized.
-		public float E123 => P3.GetElement(0);
-		public float W => E123;
+		public float e123 => P3.GetElement(0);
+		public float E0 => e123;
+		public float W => e123;
 
 		public static Point operator +(Point a, Point b)
 		{

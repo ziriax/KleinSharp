@@ -61,7 +61,7 @@ namespace KleinSharp
 	/// translators and motors.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct Rotor
+	public readonly struct Rotor : IConjugator<Plane>, IConjugator<Line>, IConjugator<Point>, IConjugator<Branch>, IConjugator<Direction>
 	{
 		public readonly __m128 P1;
 
@@ -224,7 +224,7 @@ namespace KleinSharp
 
 			float bb = b * b;
 			float cc = c * c;
-			
+
 			var rollX = MathF.Atan2(2 * (a * b + c * d), 1 - 2 * (bb + cc));
 
 			var pitchY = MathF.Asin(2 * (a * c - b * d));
@@ -233,18 +233,6 @@ namespace KleinSharp
 
 			return (rollX, pitchY, yawZ);
 		}
-
-		/// <summary>
-		/// Conjugates a plane <c>p</c> with this rotor <c>r</c> and returns the result <c>r p ~r</c>.
-		/// </summary>
-		public unsafe Plane Conjugate(Plane p)
-		{
-			__m128 p0;
-			Detail.sw012(false, false, &p.P0, P1, null, &p0);
-			return new Plane(p0);
-		}
-
-		public Plane this[Plane p] => Conjugate(p);
 
 		/// <summary>
 		/// Conjugates an array of planes with this Rotor in the input array and
@@ -259,34 +247,12 @@ namespace KleinSharp
 		/// </summary>
 		public unsafe void Conjugate(Plane* input, Plane* output, int count)
 		{
-			Detail.sw012(true, false, &input->P0, P1, null, &output->P0, count);
+			Detail.sw012(false, &input->P0, P1, null, &output->P0, count);
 		}
 
-		public unsafe void Conjugate(Span<Plane> input, Span<Plane> output)
+		public unsafe void Conjugate(Branch* input, Branch* output, int count)
 		{
-			if (input.Length != output.Length)
-				throw new ArgumentOutOfRangeException();
-
-			fixed (Plane* i = input)
-			fixed (Plane* o = output)
-			{
-				Conjugate(i, o, input.Length);
-			}
-		}
-
-		public unsafe Branch Conjugate(Branch b)
-		{
-			__m128 p1;
-			Detail.swMM(false, false, false, &b.P1, P1, null, &p1);
-			return new Branch(p1);
-		}
-
-		/// Conjugates a line $\ell$ with this Rotor and returns the result  $r\ell \widetilde{r}$.
-		public unsafe Line Conjugate(Line l)
-		{
-			__m128* ps = stackalloc __m128[2];
-			Detail.swMM(false, false, true, &l.P1, P1, null, ps);
-			return new Line(ps);
+			Detail.swMM(false, false, &input->P1, P1, null, &output->P1, count);
 		}
 
 		/// Conjugates an array of lines with this Rotor in the input array and
@@ -300,28 +266,7 @@ namespace KleinSharp
 		///     each line individually.
 		public unsafe void Conjugate(Line* input, Line* output, int count)
 		{
-			Detail.swMM(true, false, true, &input->P1, P1, null, &output->P1, count);
-		}
-
-		public unsafe void Conjugate(Span<Line> input, Span<Line> output)
-		{
-			if (input.Length != output.Length)
-				throw new ArgumentOutOfRangeException();
-
-			fixed (Line* i = input)
-			fixed (Line* o = output)
-			{
-				Conjugate(i, o, input.Length);
-			}
-		}
-
-		/// Conjugates a point $p$ with this Rotor and returns the result $rp\widetilde{r}$.
-		public unsafe Point Conjugate(Point p)
-		{
-			// NOTE: Conjugation of a plane and point with a Rotor is identical
-			__m128 p3;
-			Detail.sw012(false, false, &p.P3, P1, null, &p3);
-			return new Point(p3);
+			Detail.swMM(false, true, &input->P1, P1, null, &output->P1, count);
 		}
 
 		/// Conjugates an array of points with this Rotor in the input array and
@@ -336,27 +281,7 @@ namespace KleinSharp
 		public unsafe void Conjugate(Point* input, Point* output, int count)
 		{
 			// NOTE: Conjugation of a plane and point with a Rotor is identical
-			Detail.sw012(true, false, &input->P3, P1, null, &output->P3, count);
-		}
-
-		public unsafe void Conjugate(Span<Point> input, Span<Point> output)
-		{
-			if (input.Length != output.Length)
-				throw new ArgumentOutOfRangeException();
-
-			fixed (Point* i = input)
-			fixed (Point* o = output)
-			{
-				Conjugate(i, o, input.Length);
-			}
-		}
-
-		/// Conjugates a direction $d$ with this Rotor and returns the result $rd\widetilde{r}$.
-		public unsafe Direction Conjugate(Direction d)
-		{
-			__m128 p3;
-			Detail.sw012(false, false, &d.P3, P1, null, &p3);
-			return new Direction(p3);
+			Detail.sw012(false, &input->P3, P1, null, &output->P3, count);
 		}
 
 		/// Conjugates an array of directions with this Rotor in the input array and
@@ -370,20 +295,14 @@ namespace KleinSharp
 		///     each Direction individually.
 		public unsafe void Conjugate(Direction* input, Direction* output, int count)
 		{
-			Detail.sw012(true, false, &input->P3, P1, null, &output->P3, count);
+			Detail.sw012(false, &input->P3, P1, null, &output->P3, count);
 		}
 
-		public unsafe void Conjugate(Span<Direction> input, Span<Direction> output)
-		{
-			if (input.Length != output.Length)
-				throw new ArgumentOutOfRangeException();
-
-			fixed (Direction* i = input)
-			fixed (Direction* o = output)
-			{
-				Conjugate(i, o, input.Length);
-			}
-		}
+		public Plane this[Plane p] => this.Conjugate(p);
+		public Branch this[Branch p] => this.Conjugate(p);
+		public Point this[Point p] => this.Conjugate(p);
+		public Line this[Line p] => this.Conjugate(p);
+		public Direction this[Direction item] => this.Conjugate(item);
 
 		public float Scalar => P1.GetElement(0);
 

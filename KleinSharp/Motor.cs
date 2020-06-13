@@ -66,7 +66,7 @@ namespace KleinSharp
 	/// [here](https://github.com/jeremyong/Klein/blob/master/test/test_exp_log.cpp#L48).
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct Motor
+	public readonly struct Motor : IConjugator<Plane>, IConjugator<Line>, IConjugator<Point>, IConjugator<Branch>, IConjugator<Direction>
 	{
 		public readonly __m128 P1;
 		public readonly __m128 P2;
@@ -355,6 +355,54 @@ namespace KleinSharp
 		}
 
 		/// <summary>
+		/// Conjugates an array of planes with this Motor in the input array and
+		/// stores the result in the output array. Aliasing is only permitted when
+		/// `in == out` (in place Motor application).
+		///
+		/// !!! tip
+		///
+		///     When applying a Motor to a list of tightly packed planes, this
+		///     routine will be *significantly faster* than applying the Motor to
+		///     each Plane individually.
+		/// </summary>
+		public unsafe void Conjugate(Plane* input, Plane* output, int count)
+		{
+			var p2 = P2;
+			Detail.sw012(true, &input->P0, P1, &p2, &output->P0, count);
+		}
+
+		public Plane this[Plane p] => this.Conjugate(p);
+
+		public unsafe void Conjugate(Branch* input, Branch* output, int count)
+		{
+			var p2 = P2;
+			Detail.swMM(true, true, &input->P1, P1, &p2, &output->P1, count);
+		}
+
+		public Branch this[Branch p] => this.Conjugate(p);
+
+		public unsafe void Conjugate(Point* input, Point* output, int count)
+		{
+			var p2 = P2;
+			Detail.sw312(true, &input->P3, P1, &p2, &output->P3, count);
+		}
+
+		public Point this[Point p] => this.Conjugate(p);
+		public unsafe void Conjugate(Line* input, Line* output, int count)
+		{
+			var p2 = P2;
+			Detail.swMM(true, true, &input->P1, P1, &p2, &output->P1, count);
+		}
+
+		public Line this[Line p] => this.Conjugate(p);
+		public unsafe void Conjugate(Direction* input, Direction* output, int count)
+		{
+			Detail.sw312(false, &input->P3, P1, null, &output->P3, count);
+		}
+
+		public Direction this[Direction item] => this.Conjugate(item);
+
+		/// <summary>
 		/// Formats the motor as <c>a + be₂₃ + ce₃₁ + de₁₂ + ee₀₁ + fe₀₂ + ge₀₃ + he₀₁₂₃</c>
 		/// Elements with zero components are dropped.
 		/// </summary>
@@ -411,115 +459,6 @@ namespace kln
         mat4x4 out;
         mat4x4_12<true, false>(P1, &P2, out.cols);
         return out;
-    }
-
-    /// Conjugates a plane $p$ with this Motor and returns the result
-    /// $mp\widetilde{m}$.
-    public plane operator()(plane const& p) 
-    {
-        plane out;
-        Detail.sw012<false, true>(&p.p0_, P1, &P2, &out.p0_);
-        return out;
-    }
-
-    /// Conjugates an array of planes with this Motor in the input array and
-    /// stores the result in the output array. Aliasing is only permitted when
-    /// `in == out` (in place Motor application).
-    ///
-    /// !!! tip
-    ///
-    ///     When applying a Motor to a list of tightly packed planes, this
-    ///     routine will be *significantly faster* than applying the Motor to
-    ///     each plane individually.
-    void operator()(plane* in, plane* out, size_t count) 
-    {
-        Detail.sw012<true, true>(&in->p0_, P1, &P2, &out->p0_, count);
-    }
-
-    /// Conjugates a Line $\ell$ with this Motor and returns the result
-    /// $m\ell \widetilde{m}$.
-    public Line operator()(Line const& l) 
-    {
-        Line out;
-        Detail.swMM<false, true, true>(&l.P1, P1, &P2, &out.P1);
-        return out;
-    }
-
-    /// Conjugates an array of Lines with this Motor in the input array and
-    /// stores the result in the output array. Aliasing is only permitted when
-    /// `in == out` (in place Motor application).
-    ///
-    /// !!! tip
-    ///
-    ///     When applying a Motor to a list of tightly packed Lines, this
-    ///     routine will be *significantly faster* than applying the Motor to
-    ///     each Line individually.
-    void operator()(Line* in, Line* out, size_t count) 
-    {
-        Detail.swMM<true, true, true>(&in->P1, P1, &P2, &out->P1, count);
-    }
-
-    /// Conjugates a point $p$ with this Motor and returns the result
-    /// $mp\widetilde{m}$.
-    public point operator()(point const& p) 
-    {
-        point out;
-        Detail.sw312<false, true>(&p.p3_, P1, &P2, &out.p3_);
-        return out;
-    }
-
-    /// Conjugates an array of points with this Motor in the input array and
-    /// stores the result in the output array. Aliasing is only permitted when
-    /// `in == out` (in place Motor application).
-    ///
-    /// !!! tip
-    ///
-    ///     When applying a Motor to a list of tightly packed points, this
-    ///     routine will be *significantly faster* than applying the Motor to
-    ///     each point individually.
-    void operator()(point* in, point* out, size_t count) 
-    {
-        Detail.sw312<true, true>(&in->p3_, P1, &P2, &out->p3_, count);
-    }
-
-    /// Conjugates the origin $O$ with this Motor and returns the result
-    /// $mO\widetilde{m}$.
-    public point operator()(origin) 
-    {
-        point out;
-        out.p3_ = Detail.swo12(P1, P2);
-        return out;
-    }
-
-    /// Conjugates a direction $d$ with this Motor and returns the result
-    /// $md\widetilde{m}$.
-    ///
-    /// The cost of this operation is the same as the application of a rotor due
-    /// to the translational invariance of directions (points at infinity).
-    public direction operator()(direction const& d) 
-    {
-        direction out;
-        Detail.sw312<false, false>(&d.p3_, P1, nullptr, &out.p3_);
-        return out;
-    }
-
-    /// Conjugates an array of directions with this Motor in the input array and
-    /// stores the result in the output array. Aliasing is only permitted when
-    /// `in == out` (in place Motor application).
-    ///
-    /// The cost of this operation is the same as the application of a rotor due
-    /// to the translational invariance of directions (points at infinity).
-    ///
-    /// !!! tip
-    ///
-    ///     When applying a Motor to a list of tightly packed directions, this
-    ///     routine will be *significantly faster* than applying the Motor to
-    ///     each direction individually.
-    void operator()(direction* in,
-                                 direction* out,
-                                 size_t count) 
-    {
-        Detail.sw312<true, false>(&in->p3_, P1, nullptr, &out->p3_, count);
     }
 
 };

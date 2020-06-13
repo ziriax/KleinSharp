@@ -321,6 +321,14 @@ namespace KleinSharp
 			return new Point(p.P0);
 		}
 
+		/// <summary>
+		/// Regressive product between plane and point.
+		/// </summary>
+		public static Dual operator &(Plane a, Point b)
+		{
+			return !(!a ^ !b);
+		}
+
 		public override bool Equals(object obj)
 		{
 			return obj is Plane other && Equals(other);
@@ -352,6 +360,38 @@ namespace KleinSharp
 			Detail.dot03(a.P0, b.P3, out var p1, out var p2);
 			return new Line(p1, p2);
 		}
+
+		/// <summary>
+		/// Construct a Motor $m$ such that $\sqrt{m}$ takes Plane $b$ to Plane $a$.
+		///
+		/// !!! example
+		///
+		///     ```cpp
+		///         kln::Plane p1{x1, y1, z1, d1};
+		///         kln::Plane p2{x2, y2, z2, d2};
+		///         kln::Motor m = sqrt(p1 * p2);
+		///         Plane p3 = m(p2);
+		///         // p3 will be approximately equal to p1
+		///     ```
+		/// </summary>
+		public static Motor operator *(Plane a, Plane b)
+		{
+			Detail.gp00(a.P0, b.P0, out var p1, out var p2);
+			return new Motor(p1, p2);
+		}
+
+		public static Motor operator *(Plane a, Point b)
+		{
+			Detail.gp03(false, a.P0, b.P3, out var p1, out var p2);
+			return new Motor(p1, p2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Motor operator /(Plane a, Plane b)
+		{
+			return a * b.Inverse();
+		}
+
 
 		public override string ToString()
 		{

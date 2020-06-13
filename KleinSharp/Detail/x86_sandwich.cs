@@ -258,9 +258,9 @@ namespace KleinSharp
 		// Note: inp and out are permitted to alias iff a == out.
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe void swMM(
-			bool Variadic, bool Translate, bool InputP2,
+			bool Translate, bool InputP2,
 			__m128* inp, __m128 b, __m128* c,
-			__m128* res, int count = 0)
+			__m128* res, int count)
 		{
 			// p1 block
 			// a0(b0^2 + b1^2 + b2^2 + b3^2) +
@@ -364,9 +364,8 @@ namespace KleinSharp
 				tmp6 = _mm_mul_ps(tmp6, scale);
 			}
 
-			int limit = Variadic ? count : 1;
 			int stride = InputP2 ? 2 : 1;
-			for (int i = 0; i != limit; ++i)
+			for (int i = 0; i < count; ++i)
 			{
 				ref __m128 p1_in = ref inp[stride * i]; // a
 				__m128 p1_in_xzwy = KLN_SWIZZLE(p1_in, 1, 3, 2, 0);
@@ -409,7 +408,7 @@ namespace KleinSharp
 		// If Variadic is true, a and out must point to a contiguous block of memory
 		// equivalent to __m128[count]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe void sw012(bool Variadic, bool Translate, __m128* a, __m128 b, __m128* c, __m128* res, int count = 0)
+		public static unsafe void sw012(bool Translate, __m128* a, __m128 b, __m128* c, __m128* res, int count)
 		{
 			// LSB
 			//
@@ -492,9 +491,7 @@ namespace KleinSharp
 
 			// The temporaries (tmp1, tmp2, tmp3, tmp4) strictly only have a
 			// dependence on b and c.
-
-			int limit = Variadic ? count : 1;
-			for (int i = 0; i != limit; ++i)
+			for (int i = 0; i < count; ++i)
 			{
 				// Compute the lower block for components e1, e2, and e3
 				ref __m128 p = ref res[i];
@@ -512,7 +509,7 @@ namespace KleinSharp
 
 		// Apply a motor to a point
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static unsafe void sw312(bool Variadic, bool Translate, __m128* a, __m128 b, __m128* c, __m128* res, int count = 0)
+		public static unsafe void sw312(bool Translate, __m128* a, __m128 b, __m128* c, __m128* res, int count)
 		{
 			// LSB
 			// a0(b1^2 + b0^2 + b2^2 + b3^2) e123 +
@@ -577,8 +574,7 @@ namespace KleinSharp
 				// tmp4 needs to be scaled by (_, a0, a0, a0)
 			}
 
-			int limit = Variadic ? count : 1;
-			for (int i = 0; i != limit; ++i)
+			for (int i = 0; i < count; ++i)
 			{
 				ref __m128 p = ref res[i];
 				p = _mm_mul_ps(tmp1, KLN_SWIZZLE(a[i], 2, 1, 3, 0));

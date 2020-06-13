@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
@@ -50,12 +51,11 @@ namespace KleinSharp
 			// MSB
 
 			// Store a number of scalar temporaries needed later
-			float* buf = stackalloc float[4];
-			_mm_storeu_ps(buf, _mm_mul_ps(b, b));
-			float b0_2 = buf[0];
-			float b1_2 = buf[1];
-			float b2_2 = buf[2];
-			float b3_2 = buf[3];
+			var buf = _mm_mul_ps(b, b);
+			float b0_2 = buf.GetElement(0);
+			float b1_2 = buf.GetElement(1);
+			float b2_2 = buf.GetElement(2);
+			float b3_2 = buf.GetElement(3);
 
 			// The first column of the matrix we need to produce contains the scale
 			// factors of the x-coordinate (a1). This can be read off as:

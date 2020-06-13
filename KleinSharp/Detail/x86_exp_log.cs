@@ -95,26 +95,25 @@ namespace KleinSharp
 			// cosu + sinu n + v n cosu e0123 - v sinu e0123
 			//
 			// where we've used the fact that n is normalized and squares to -1.
-			float* uv = stackalloc float[2];
-			_mm_store_ss(uv, u);
+			float u0 = _mm_store_ss(u);
+
 			// Note the v here corresponds to minus_v
-			_mm_store_ss(uv + 1, minus_v);
+			float v0 = _mm_store_ss(minus_v);
 
-			float* sincosu = stackalloc float[2];
-			sincosu[0] = MathF.Sin(uv[0]);
-			sincosu[1] = MathF.Cos(uv[0]);
+			float sinu0 = MathF.Sin(u0);
+			float cosu0 = MathF.Cos(u0);
 
-			__m128 sinu = _mm_set1_ps(sincosu[0]);
+			__m128 sinu = _mm_set1_ps(sinu0);
 			p1_out = _mm_add_ps(
-				 _mm_set_ps(0f, 0f, 0f, sincosu[1]), _mm_mul_ps(sinu, norm_real));
+				 _mm_set_ps(0f, 0f, 0f, cosu0), _mm_mul_ps(sinu, norm_real));
 
 			// The second partition has contributions from both the real and ideal
 			// parts.
-			__m128 cosu = _mm_set_ps(sincosu[1], sincosu[1], sincosu[1], 0f);
+			__m128 cosu = _mm_set_ps(cosu0, cosu0, cosu0, 0f);
 			__m128 minus_vcosu = _mm_mul_ps(minus_v, cosu);
 			p2_out = _mm_mul_ps(sinu, norm_ideal);
 			p2_out = _mm_add_ps(p2_out, _mm_mul_ps(minus_vcosu, norm_real));
-			float minus_vsinu = uv[1] * sincosu[0];
+			float minus_vsinu = v0 * sinu0;
 			p2_out = _mm_add_ps(_mm_set_ps(0f, 0f, 0f, minus_vsinu), p2_out);
 		}
 

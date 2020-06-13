@@ -209,18 +209,18 @@ namespace KleinSharp
 			return _mm_movemask_ps(cmp) != 0b1111;
 		}
 
-		public unsafe (float rollX, float pitchY, float yawZ) AsEulerAngles()
+		public (float rollX, float pitchY, float yawZ) AsEulerAngles()
 		{
-			float* buf = stackalloc float[4];
-			Store(buf);
-			float buf1_2 = buf[1] * buf[1];
-			float buf2_2 = buf[2] * buf[2];
-			var rollX = MathF.Atan2(2 * (buf[0] * buf[1] + buf[2] * buf[3]), 1 - 2 * (buf1_2 + buf2_2));
+			var (a, b, c, d) = this;
 
-			var pitchY = MathF.Asin(2 * (buf[0] * buf[2] - buf[1] * buf[3]));
+			float bb = b * b;
+			float cc = c * c;
+			
+			var rollX = MathF.Atan2(2 * (a * b + c * d), 1 - 2 * (bb + cc));
 
-			var yawZ = MathF.Atan2(2 * (buf[0] * buf[3] + buf[1] * buf[2]),
-				1 - 2 * (buf2_2 + buf[3] * buf[3]));
+			var pitchY = MathF.Asin(2 * (a * c - b * d));
+
+			var yawZ = MathF.Atan2(2 * (a * d + b * c), 1 - 2 * (cc + d * d));
 
 			return (rollX, pitchY, yawZ);
 		}

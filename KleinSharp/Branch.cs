@@ -88,8 +88,6 @@ namespace KleinSharp
 		public float E32 => -E23;
 		public float X => E23;
 
-		public ReadOnlySpan<float> ToSpan() => Helpers.ToFloatSpan(this);
-
 		/// <summary>
 		/// If a line is constructed as the regressive product (join) of
 		/// two points, the squared norm provided here is the squared
@@ -99,8 +97,7 @@ namespace KleinSharp
 		public float SquaredNorm()
 		{
 			var dp = Detail.hi_dp(P1, P1);
-			_mm_store_ss(out var norm, dp);
-			return norm;
+			return _mm_store_ss(dp);
 		}
 
 		/// <summary>
@@ -141,7 +138,7 @@ namespace KleinSharp
 		public Rotor Exp()
 		{
 			// Compute the Rotor angle
-			_mm_store_ss(out var ang, Detail.sqrt_nr1(Detail.hi_dp(P1, P1)));
+			var ang = _mm_store_ss(Detail.sqrt_nr1(Detail.hi_dp(P1, P1)));
 			float cos_ang = MathF.Cos(ang);
 			float sin_ang = MathF.Sin(ang) / ang;
 
@@ -187,6 +184,19 @@ namespace KleinSharp
 		{
 			__m128 flip = _mm_set_ps(-0f, -0f, -0f, 0f);
 			return new Branch(_mm_xor_ps(b.P1, flip));
+		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static IdealLine operator !(Branch b)
+		{
+			return new IdealLine(b.P1);
+		}
+
+		public static Dual operator ^(Branch a, IdealLine b)
+		{
+			return new Dual(0, _mm_store_ss(Detail.hi_dp_ss(a.P1, b.P2)));
 		}
 
 		public bool Equals(Branch other)

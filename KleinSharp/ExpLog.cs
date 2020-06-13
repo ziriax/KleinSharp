@@ -63,7 +63,7 @@ public ideal_line Log(translator t)
 /// Exponentiate an ideal line to produce a translation.
 ///
 /// The exponential of an ideal line
-/// $a \mathbf{e}_{01} + b\mathbf{e}_{02} + c\mathbf{e}_{03}$ is given as:
+/// $a e₀₁ + be₀₂ + ce₀₃$ is given as:
 ///
 /// $$\exp{\left[a\ee_{01} + b\ee_{02} + c\ee_{03}\right]} = 1 +\
 /// a\ee_{01} + b\ee_{02} + c\ee_{03}$$

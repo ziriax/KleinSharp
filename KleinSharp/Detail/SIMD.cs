@@ -87,12 +87,11 @@ namespace KleinSharp
 		public static unsafe void _mm_store_ss(float* address, __m128 source) => Sse.StoreScalar(address, source);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe void _mm_store_ss(out float address, __m128 source)
+		public static unsafe float _mm_store_ss(__m128 source)
 		{
-			fixed (float* ptr = &address)
-			{
-				Sse.StoreScalar(ptr, source);
-			}
+			float value;
+			Sse.StoreScalar(&value, source);
+			return value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -114,7 +113,7 @@ namespace KleinSharp
 		public static unsafe void _mm_storeu_ps(float* address, __m128 source) => Sse.Store(address, source);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe void _mm_store_ps(float* address, __m128 source) => Sse.StoreAligned(address, source);
+		public static unsafe void _mm_store_aligned_ps(float* address, __m128 source) => Sse.StoreAligned(address, source);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe __m128 _mm_loadu_ps(float* address) => Sse.LoadVector128(address);

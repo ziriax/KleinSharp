@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Text;
@@ -8,7 +9,7 @@ using static KleinSharp.Simd;
 namespace KleinSharp
 {
 	/// <summary>
-	/// A Point is represented as the multivector <code>e₁₂₃ + x e₀₃₂ + y e₀₁₃ + z e₀₂₁</code>
+	/// A Point is represented as the multivector <c>e₁₂₃ + x e₀₃₂ + y e₀₁₃ + z e₀₂₁</c>
 	/// <br/>
 	/// The Point has a trivector representation because it is the
 	/// fixed point of 3 planar reflections (each of which is a grade-1 multivector).
@@ -64,27 +65,47 @@ namespace KleinSharp
 			}
 		}
 
+		/// <summary>
+		/// Deconstruct the components of the point <c>e₁₂₃ + x e₀₃₂ + y e₀₁₃ + z e₀₂₁</c>
+		/// <br/>
+		/// The point is assumed to be normalized, as the w component is not returned here.
+		/// </summary>
 		public void Deconstruct(out float x, out float y, out float z)
 		{
-			x = X;
-			y = Y;
-			z = Z;
+			x = E032;
+			y = E013;
+			z = E021;
 		}
 
-		public void Deconstruct(out float e123, out float e032, out float e013, out float e021)
+		/// <summary>
+		/// Deconstruct the components of the point <c>w e₁₂₃ + x e₀₃₂ + y e₀₁₃ + z e₀₂₁</c>
+		/// </summary>
+		public void Deconstruct(out float w, out float x, out float y, out float z)
 		{
-			e032 = E032;
-			e013 = E013;
-			e021 = E021;
-			e123 = E123;
+			w = E123;
+			x = E032;
+			y = E013;
+			z = E021;
 		}
-
-		public ReadOnlySpan<float> ToSpan() => Helpers.ToFloatSpan(this);
 
 		/// <summary>
 		/// Store m128 contents into an array of 4 floats
 		/// </summary>
-		public unsafe void Store(float* data) => _mm_store_ps(data, P3);
+		public unsafe void Store(float* data) => _mm_storeu_ps(data, P3);
+
+		/// <summary>
+		/// Store m128 contents into a span of at least 4 floats.
+		/// </summary>
+		public unsafe void Store(Span<float> data)
+		{
+			if (data.Length < 4)
+				throw new ArgumentOutOfRangeException(nameof(data));
+
+			fixed (float* p = data)
+			{
+				_mm_storeu_ps(p, P3);
+			}
+		}
 
 		/// <summary>
 		/// Return a normalized copy of this Point, so that the coefficient of e₁₂₃ becomes 1.
@@ -113,18 +134,18 @@ namespace KleinSharp
 			return new Point(p3);
 		}
 
-		public float X => P3.GetElement(1);
-		public float E032 => X;
+		public float E032 => P3.GetElement(1);
+		public float X => E032;
 
-		public float Y => P3.GetElement(2);
-		public float E013 => Y;
+		public float E013 => P3.GetElement(2);
+		public float Y => E013;
 
-		public float Z => P3.GetElement(3);
-		public float E021 => Z;
+		public float E021 => P3.GetElement(3);
+		public float Z => E021;
 
 		/// The homogeneous coordinate `w` is exactly $1$ when normalized.
-		public float W => P3.GetElement(0);
-		public float E123 => W;
+		public float E123 => P3.GetElement(0);
+		public float W => E123;
 
 		public static Point operator +(Point a, Point b)
 		{
@@ -152,7 +173,7 @@ namespace KleinSharp
 		}
 
 		/// <remarks>
-		/// Unary minus (leaves homogeneous coordinate untouched)
+		/// Unary minus (leaves homogeneous component w untouched)
 		/// </remarks>
 		public static Point operator -(Point p)
 		{
@@ -162,7 +183,10 @@ namespace KleinSharp
 		/// <summary>
 		/// Reversion operator
 		/// </summary>
-		public static Point operator~ (Point p)
+		/// <remarks>
+		/// Reversion negates all components except the scalar. E.g. ~(1 + e₀₃) = 1 - e₀₃
+		/// </remarks>
+		public static Point operator ~(Point p)
 		{
 			__m128 flip = _mm_set1_ps(-0f);
 			return new Point(_mm_xor_ps(p.P3, flip));
@@ -172,9 +196,121 @@ namespace KleinSharp
 		/// Generates a translator $t$ that produces a displacement along the line
 		/// between points $a$ and $b$. The translator given by $\sqrt{t}$ takes $b$ to $a$.
 		/// </summary>
-		public static Translator operator* (Point a, Point b)
+		public static Translator operator *(Point a, Point b)
 		{
 			return new Translator(Detail.gp33(a.P3, b.P3));
+		}
+
+		/// <summary>
+		/// Geometric product between a point and a plane
+		/// </summary>
+		/// <returns>
+		/// TODO: Explain what the motor represents
+		/// </returns>
+		public static Motor operator *(Point b, Plane a)
+		{
+			Detail.gp03(true, a.P0, b.P3, out var p1, out var p2);
+			return new Motor(p1, p2);
+		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static Translator operator /(Point a, Point b)
+		{
+			return a * b.Inverse();
+		}
+
+		/// <summary>
+		/// Inner product between point and plane
+		/// </summary>
+		/// <returns>
+		/// The line ⊥ to the plane through the point
+		/// </returns>
+		public static Line operator |(Point a, Plane b)
+		{
+			return b | a;
+		}
+
+		/// <summary>
+		/// Inner product between a point and a line
+		/// </summary>
+		/// <returns>
+		/// The plane ⊥ to the line through the point
+		/// </returns>
+		public static Plane operator |(Point a, Line b)
+		{
+			return new Plane(Detail.dotPTL(a.P3, b.P1));
+		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static float operator |(Point a, Point b)
+		{
+			return Detail.dot33(a.P3, b.P3).GetElement(0);
+		}
+
+		/// <summary>
+		/// The dual of a point (a,b,c,d) is the plane ax + by + cz + d = 0
+		/// </summary>
+		public static Plane operator !(Point a)
+		{
+			return new Plane(a.P3);
+		}
+
+		/// <summary>
+		/// Regressive product
+		/// TODO: Document!
+		/// </summary>
+		public static Line operator &(Point a, Point b)
+		{
+			return !(!a ^ !b);
+		}
+
+		/// <summary>
+		/// Regressive product
+		/// TODO: Document!
+		/// </summary>
+		public static Plane operator &(Point a, Line b)
+		{
+			return !(!a ^ !b);
+		}
+
+		/// <summary>
+		/// Regressive product
+		/// TODO: Document!
+		/// </summary>
+		public static Plane operator &(Point a, Branch b)
+		{
+			return !(!a ^ !b);
+		}
+
+		/// <summary>
+		/// Regressive product
+		/// TODO: Document!
+		/// </summary>
+		public static Plane operator &(Point a, IdealLine b)
+		{
+			return !(!a ^ !b);
+		}
+
+		/// <summary>
+		/// Regressive product
+		/// TODO: Document!
+		/// </summary>
+		public static Dual operator &(Point a, Plane b)
+		{
+			return !(!a ^ !b);
+		}
+
+		/// <summary>
+		/// Exterior aka outer aka wedge product
+		/// </summary>
+		public static Dual operator ^(Point b, Plane a)
+		{
+			__m128 tmp = Detail.ext03(true, a.P0, b.P3);
+			return new Dual(0, _mm_store_ss(tmp));
 		}
 
 		public static implicit operator Point(Origin _)

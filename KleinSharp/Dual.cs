@@ -27,22 +27,35 @@ namespace KleinSharp
 		public float Scalar => P;
 		public float E0123 => Q;
 
-		public ReadOnlySpan<float> ToSpan() => Helpers.ToFloatSpan(this);
-
 		public static Dual operator +(Dual a, Dual b)
-			=> new Dual(a.P + b.P, a.Q + b.Q);
+		{
+			return new Dual(a.P + b.P, a.Q + b.Q);
+		}
 
 		public static Dual operator -(Dual a, Dual b)
-			=> new Dual(a.P - b.P, a.Q - b.Q);
+		{
+			return new Dual(a.P - b.P, a.Q - b.Q);
+		}
 
 		public static Dual operator *(Dual a, float s)
-			=> new Dual(a.P * s, a.Q * s);
+		{
+			return new Dual(a.P * s, a.Q * s);
+		}
 
 		public static Dual operator *(float s, Dual a)
-			=> new Dual(a.P * s, a.Q * s);
+		{
+			return new Dual(a.P * s, a.Q * s);
+		}
 
 		public static Dual operator /(Dual a, float s)
-			=> new Dual(a.P / s, a.Q / s);
+		{
+			return new Dual(a.P / s, a.Q / s);
+		}
+
+		public static Dual operator !(Dual d)
+		{
+			return new Dual(d.Q, d.P);
+		}
 
 		public bool Equals(Dual other)
 		{

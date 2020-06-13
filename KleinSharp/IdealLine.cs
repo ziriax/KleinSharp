@@ -45,13 +45,10 @@ namespace KleinSharp
 			e03 = E03;
 		}
 
-		public ReadOnlySpan<float> ToSpan() => Helpers.ToFloatSpan(this);
-
 		public float SquaredIdealNorm()
 		{
 			var dp = Detail.hi_dp(P2, P2);
-			_mm_store_ss(out var res, dp);
-			return res;
+			return _mm_store_ss(dp);
 		}
 
 		public float IdealNorm()
@@ -97,6 +94,55 @@ namespace KleinSharp
 			__m128 flip = _mm_set_ps(-0f, -0f, -0f, 0f);
 			return new IdealLine(_mm_xor_ps(l.P2, flip));
 		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static Branch operator !(IdealLine l)
+		{
+			return new Branch(l.P2);
+		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static Plane operator |(IdealLine b, Plane a)
+		{
+			return new Plane(Detail.dotPIL(true , a.P0, b.P2));
+		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static Point operator ^(IdealLine b, Plane a)
+		{
+			return a ^ b;
+		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static Dual operator ^(IdealLine b, Branch a)
+		{
+			return a ^ b;
+		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static Dual operator ^(IdealLine b, Line a)
+		{
+			return a ^ b;
+		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static Plane operator &(IdealLine b, Point a)
+		{
+			return a & b;
+		}
+
 
 		public float E01 => P2.GetElement(1);
 		public float E10 => -E01;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
 
@@ -68,12 +69,13 @@ namespace KleinSharp
 		public readonly __m128 P2;
 
 		/// <summary>
-		/// Direct initialization from components. A more common way of creating a
-		/// Motor is to take a product between a rotor and a translator.
-		/// The arguments coorespond to the multivector
-		/// $a + b\mathbf{e}_{23} + c\mathbf{e}_{31} + d\mathbf{e}_{12} +\
-		/// e\mathbf{e}_{01} + f\mathbf{e}_{02} + g\mathbf{e}_{03} +\
-		/// h\mathbf{e}_{0123}$.
+		/// Direct initialization from components.
+		/// <br/>
+		/// A more common way of creating a Motor is to take a product between a rotor and a translator.
+		/// <br/>
+		/// The arguments corresponds to the multivector
+		/// <br/>
+		/// <c>a + be₂₃ + ce₃₁ + de₁₂ + ee₀₁ + fe₀₂ + ge₀₃ + he₀₁₂₃</c>
 		/// </summary>
 		public Motor(float a, float b, float c, float d, float e, float f, float g, float h)
 		{
@@ -107,6 +109,30 @@ namespace KleinSharp
 			P2 = _mm_loadu_ps(input + 4);
 		}
 
+		/// <summary>
+		/// Store the 8 float components into memory
+		/// </summary>
+		public unsafe void Store(float* data)
+		{
+			_mm_storeu_ps(data, P1);
+			_mm_storeu_ps(data + 4, P2);
+		}
+
+		/// <summary>
+		/// Store the 8 float components in a span
+		/// </summary>
+		public unsafe void Store(Span<float> data)
+		{
+			if (data.Length < 8)
+				throw new ArgumentOutOfRangeException(nameof(data));
+
+			fixed (float* p = data)
+			{
+				_mm_storeu_ps(p, P1);
+				_mm_storeu_ps(p + 4, P2);
+			}
+		}
+
 		public float Scalar => P1.GetElement(0);
 		public float E12 => P1.GetElement(3);
 		public float E21 => -E12;
@@ -121,6 +147,21 @@ namespace KleinSharp
 		public float E03 => P2.GetElement(3);
 		public float E30 => -E03;
 		public float E0123 => P2.GetElement(0);
+
+		/// <summary>
+		/// Deconstructs the components of the motor <c>a + be₂₃ + ce₃₁ + de₁₂ + ee₀₁ + fe₀₂ + ge₀₃ + he₀₁₂₃</c>
+		/// </summary>
+		public void Deconstruct(out float a, out float b, out float c, out float d, out float e, out float f, out float g, out float h)
+		{
+			a = Scalar;
+			b = E23;
+			c = E31;
+			d = E12;
+			e = E01;
+			f = E02;
+			g = E03;
+			h = E0123;
+		}
 
 		/// Normalizes this Motor $m$ such that $m\widetilde{m} = 1$.
 		internal static (__m128, __m128) Normalized(__m128 p1, __m128 p2)
@@ -293,6 +334,26 @@ namespace KleinSharp
 		{
 			__m128 flip = _mm_set_ps(-0f, -0f, -0f, 0f);
 			return new Motor(_mm_xor_ps(m.P1, flip), _mm_xor_ps(m.P2, flip));
+		}
+
+		/// <summary>
+		/// Formats the motor as <c>a + be₂₃ + ce₃₁ + de₁₂ + ee₀₁ + fe₀₂ + ge₀₃ + he₀₁₂₃</c>
+		/// Elements with zero components are dropped.
+		/// </summary>
+		public override string ToString()
+		{
+			var (a, b, c, d, e, f, g, h) = this;
+
+			return new StringBuilder(64)
+				.AppendScalar(a)
+				.AppendElement(b, "e₂₃")
+				.AppendElement(c, "e₃₁")
+				.AppendElement(d, "e₁₂")
+				.AppendElement(e, "e₀₁")
+				.AppendElement(f, "e₀₂")
+				.AppendElement(g, "e₀₃")
+				.AppendElement(h, "e₀₁₂₃")
+				.ZeroWhenEmpty();
 		}
 	}
 }

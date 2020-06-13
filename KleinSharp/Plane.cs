@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
 
@@ -68,6 +70,36 @@ namespace KleinSharp
 		}
 
 		/// <summary>
+		/// Store the 4 float components to memory
+		/// </summary>
+		public unsafe void Store(float* data) => _mm_storeu_ps(data, P0);
+
+		/// <summary>
+		/// Store the 4 float components in a span
+		/// </summary>
+		public unsafe void Store(Span<float> data)
+		{
+			if (data.Length < 4)
+				throw new ArgumentOutOfRangeException(nameof(data));
+
+			fixed (float* p = data)
+			{
+				_mm_storeu_ps(p, P0);
+			}
+		}
+
+		/// <summary>
+		/// Deconstructs the components of the plane <c>d e₀ +a e₁ +b e₂ +c e₃</c>
+		/// </summary>
+		public void Deconstruct(out float d, out float a, out float b, out float c)
+		{
+			d = E0;
+			a = E1;
+			b = E2;
+			c = E3;
+		}
+
+		/// <summary>
 		/// Normalize this Plane $p$ such that $p \cdot p = 1$.
 		///
 		/// In order to compute the cosine of the angle between Planes via the
@@ -96,8 +128,7 @@ namespace KleinSharp
 		/// </summary>
 		public float Norm()
 		{
-			_mm_store_ss(out var norm, Detail.sqrt_nr1(Detail.hi_dp(P0, P0)));
-			return norm;
+			return _mm_store_ss(Detail.sqrt_nr1(Detail.hi_dp(P0, P0)));
 		}
 
 		public Plane Inverse()
@@ -168,16 +199,21 @@ namespace KleinSharp
 		public Point this[Point p] => Reflect(p);
 
 		public float X => P0.GetElement(1);
+		public float A => X;
 		public float E1 => X;
 
 		public float Y => P0.GetElement(2);
+		public float B => Y;
 		public float E2 => Y;
 
 		public float Z => P0.GetElement(3);
+		public float C => Z;
 		public float E3 => Z;
 
-		public float D => P0.GetElement(0);
-		public float E0 => D;
+		public float W => P0.GetElement(0);
+		public float D => W;
+		public float E0 => W;
+
 
 		public static Plane operator +(Plane a, Plane b)
 		{
@@ -210,6 +246,55 @@ namespace KleinSharp
 			return new Plane(_mm_xor_ps(p.P0, _mm_set_ps(-0f, -0f, -0f, 0f)));
 		}
 
+		/// <summary>
+		/// Wedge (aka exterior, outer) product between two planes
+		/// </summary>
+		/// <returns>
+		/// The intersection line between the two planes (could be an ideal line for parallel planes)
+		/// </returns>
+		public static Line operator ^(Plane a, Plane b)
+		{
+			Detail.ext00(a.P0, b.P0, out var p1, out var p2);
+			return new Line(p1, p2);
+		}
+
+		public static Point operator ^(Plane a, Branch b)
+		{
+			return new Point(Detail.extPB(a.P0, b.P1));
+		}
+
+		public static Point operator ^(Plane a, Line b)
+		{
+			return new Point(Detail.ext02(a.P0, b.P2));
+		}
+
+		public static Dual operator ^(Plane a, Point b)
+		{
+			return new Dual(0, _mm_store_ss(Detail.ext03(false, a.P0, b.P3)));
+		}
+
+		public static Plane operator |(Plane a, IdealLine b)
+		{
+			return new Plane(Detail.dotPIL(false, a.P0, b.P2));
+		}
+
+		public static Point operator ^(Plane a, IdealLine b)
+		{
+			return new Point(Detail.ext02(a.P0, b.P2));
+		}
+
+		/// <summary>
+		/// The dual of a plane ax+by+cz+d = 0 is the point (a,b,c,d).
+		/// </summary>
+		/// <remarks>
+		/// If the plane is through the origin, then the dual corresponds to the normal of the plane.
+		/// TODO: Document other case
+		/// </remarks>
+		public static Point operator !(Plane p)
+		{
+			return new Point(p.P0);
+		}
+
 		public override bool Equals(object obj)
 		{
 			return obj is Plane other && Equals(other);
@@ -229,5 +314,30 @@ namespace KleinSharp
 		{
 			return !left.Equals(right);
 		}
+
+		/// <summary>
+		/// Inner product between plane and point
+		/// </summary>
+		/// <returns>
+		/// The line ⊥ to the plane through the point
+		/// </returns>
+		public static Line operator |(Plane a, Point b)
+		{
+			Detail.dot03(a.P0, b.P3, out var p1, out var p2);
+			return new Line(p1, p2);
+		}
+
+		public override string ToString()
+		{
+			var (d, a, b, c) = this;
+
+			return new StringBuilder(64)
+				.AppendElement(d, "e₀")
+				.AppendElement(a, "e₁")
+				.AppendElement(b, "e₂")
+				.AppendElement(c, "e₃")
+				.ZeroWhenEmpty();
+		}
+
 	}
 }

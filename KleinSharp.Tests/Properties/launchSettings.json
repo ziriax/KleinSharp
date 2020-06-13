@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "KleinSharp.Tests": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

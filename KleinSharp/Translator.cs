@@ -66,8 +66,8 @@ namespace KleinSharp
 		/// <summary>
 		/// Fast load operation for packed data that is already normalized. The
 		/// argument `data` should point to a set of 4 float values with layout
-		/// `(0f, a, b, c)` corresponding to the multivector $a\mathbf{e}_{01} +
-		/// b\mathbf{e}_{02} + c\mathbf{e}_{03}$.
+		/// `(0f, a, b, c)` corresponding to the multivector $ae₀₁ +
+		/// be₀₂ + ce₀₃$.
 		///
 		/// !!! danger
 		///

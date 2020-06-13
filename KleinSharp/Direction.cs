@@ -64,8 +64,6 @@ namespace KleinSharp
 
 		public float Z => P3.GetElement(3);
 
-		public ReadOnlySpan<float> ToSpan() => Helpers.ToFloatSpan(this);
-
 		/// Return a normalized direction by dividing all components by the
 		/// magnitude (for speed, `rsqrtps` is used with a single Newton-Raphson refinement iteration)
 		/// Return a normalized copy of this direction

@@ -4,26 +4,26 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
 
 namespace KleinSharp
 {
 	/// <summary>
-	/// A general Line in PGA is given as a 6-coordinate bivector with a direct
-	/// correspondence to Plücker coordinates.
-	///
+	/// A general Line in PGA is given as a 6-coordinate bivector with a direct  correspondence to Plücker coordinates.
+	/// <br/>
 	/// All Lines can be exponentiated using the <see cref="Line.Exp"></see> method to generate a motor.
 	/// </summary>
 	/// <remarks>
 	/// Klein provides three Line classes: <see cref="Line"/>, <see cref="Branch"/>, and <see cref="IdealLine"/>.
-	///
+	/// <br/>
 	/// The Line class represents a full six-coordinate bivector.
-	///
+	/// <br/>
 	/// The Branch contains three non-degenerate components (aka, a Line through the origin).
-	///
+	/// <br/>
 	/// The ideal Line represents the Line at infinity.
-	///
+	/// <br/>
 	/// When the Line is created as a meet of two planes or join of two points
 	/// (or carefully selected Plücker coordinates), it will be a Euclidean Line
 	/// (factorisable as the meet of two vectors).
@@ -51,10 +51,16 @@ namespace KleinSharp
 			P2 = _mm_set_ps(c, b, a, 0f);
 		}
 
-		public Line(__m128 xmm1, __m128 xmm2)
+		public Line(__m128 p2)
 		{
-			P1 = xmm1;
-			P2 = xmm2;
+			P1 = default;
+			P2 = p2;
+		}
+
+		public Line(__m128 p1, __m128 p2)
+		{
+			P1 = p1;
+			P2 = p2;
 		}
 
 		public Line(IdealLine other)
@@ -75,17 +81,53 @@ namespace KleinSharp
 			P2 = p1p2[1];
 		}
 
-		public void Deconstruct(out float e01, out float e02, out float e03, out float e23, out float e31, out float e12)
+		/// <summary>
+		/// Store the 8 float components into memory
+		/// </summary>
+		public unsafe void Store(float* data)
 		{
-			e01 = E01;
-			e02 = E02;
-			e03 = E03;
-			e23 = E23;
-			e31 = E31;
-			e12 = E12;
+			_mm_storeu_ps(data, P1);
+			_mm_storeu_ps(data + 4, P2);
 		}
 
-		public ReadOnlySpan<float> ToSpan() => Helpers.ToFloatSpan(this);
+		/// <summary>
+		/// Store the 8 float components in a span
+		/// </summary>
+		public unsafe void Store(Span<float> data)
+		{
+			if (data.Length < 8)
+				throw new ArgumentOutOfRangeException(nameof(data));
+
+			fixed (float* p = data)
+			{
+				_mm_storeu_ps(p, P1);
+				_mm_storeu_ps(p + 4, P2);
+			}
+		}
+
+		/// <summary>
+		/// Deconstructs the components of the line <c>a e₀₁ + b e₀₂ + c e₀₃ + d e₂₃ + e e₃₁ + f e₁₂</c>
+		/// </summary>
+		public void Deconstruct(out float a, out float b, out float c, out float d, out float e, out float f)
+		{
+			a = E01;
+			b = E02;
+			c = E03;
+			d = E23;
+			e = E31;
+			f = E12;
+		}
+
+		/// <summary>
+		/// Deconstructs the line in
+		/// p1: (1, e12, e31, e23)
+		/// p2: (e0123, e01, e02, e03)
+		/// </summary>
+		public void Deconstruct(out __m128 p1, out __m128 p2)
+		{
+			p1 = P1;
+			p2 = P2;
+		}
 
 		/// <summary>
 		/// Returns the square root of the quantity produced by `squared_norm`.
@@ -104,8 +146,7 @@ namespace KleinSharp
 		public float SquaredNorm()
 		{
 			__m128 dp = Detail.hi_dp(P1, P1);
-			_mm_store_ss(out var sn, dp);
-			return sn;
+			return _mm_store_ss(dp);
 		}
 
 		/// Normalize a Line such that $\ell^2 = -1$.
@@ -169,14 +210,14 @@ namespace KleinSharp
 			return new Line(p1, p2);
 		}
 
-		public float E12 => P1.GetElement(3);
-		public float E21 => E12;
+		public float E23 => P1.GetElement(1);
+		public float E32 => -E23;
 
 		public float E31 => P1.GetElement(2);
 		public float E13 => -E31;
 
-		public float E23 => P1.GetElement(1);
-		public float E32 => -E23;
+		public float E12 => P1.GetElement(3);
+		public float E21 => E12;
 
 		public float E01 => P2.GetElement(1);
 		public float E10 => -E01;
@@ -278,6 +319,49 @@ namespace KleinSharp
 			var p1 = _mm_xor_ps(l.P1, flip);
 			var p2 = _mm_xor_ps(l.P2, flip);
 			return new Line(p1, p2);
+		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static Line operator !(in Line l)
+		{
+			return new Line(l.P2, l.P1);
+		}
+
+		/// <summary>
+		/// TODO: Document!
+		/// </summary>
+		public static Dual operator ^(Line a, IdealLine b)
+		{
+			return new Branch(a.P1) ^ b;
+		}
+
+		/// <summary>
+		/// Convert the line through a branch (i.e. line parallel through the origin)
+		/// TODO: Check if this is correct! Klein C++ doesn't have this.
+		/// </summary>
+		public static explicit operator Branch(in Line l)
+		{
+			return new Branch(l.P1);
+		}
+
+		/// <summary>
+		/// Formats the line to the string <c>a e₀₁ + b e₀₂ + c e₀₃ + d e₂₃ + e e₃₁ + f e₁₂</c>,
+		/// dropping elements that have zero coefficients.
+		/// </summary>
+		public override string ToString()
+		{
+			var (a, b, c, d, e, f) = this;
+
+			return new StringBuilder(64)
+				.AppendElement(a, "e₀₁")
+				.AppendElement(b, "e₀₂")
+				.AppendElement(c, "e₀₃ ")
+				.AppendElement(d, "e₂₃")
+				.AppendElement(e, "e₃₁")
+				.AppendElement(f, "e₁₂")
+				.ZeroWhenEmpty();
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
 
@@ -110,33 +111,56 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Fast load operation for packed data that is already normalized. The
-		/// argument `data` should point to a set of 4 float values with layout `(a,
-		/// b, c, d)` corresponding to the multivector
-		/// $a + b\mathbf{e}_{23} + c\mathbf{e}_{31} + d\mathbf{e}_{12}$.
-		///
-		/// !!! danger
-		///
-		///     The Rotor data loaded this way *must* be normalized. That is, the
-		///     Rotor $r$ must satisfy $r\widetilde{r} = 1$.
+		/// Fast load operation for packed data that is already normalized.
+		/// <br/>
+		/// The argument `data` should point to a set of 4 float values with layout `(a, b, c, d)`,
+		/// corresponding to the multivector <c>a + be₂₃ + ce₃₁ + de₁₂</c>
 		/// </summary>
+		/// <remarks>
+		/// The Rotor data loaded this way <b>must be normalized</b>!
+		/// <br/>
+		/// That is, the rotor <c>r</c> must satisfy <c>r ~r = 1</c>.
+		/// </remarks>
 		public unsafe Rotor(float* data)
 		{
 			P1 = _mm_loadu_ps(data);
 		}
 
-		public ReadOnlySpan<float> ToSpan() => Helpers.ToFloatSpan(this);
-
 		/// <summary>
-		/// Store m128 contents into an array of 4 floats
+		/// Store the 4 float components in memory
 		/// </summary>
-		public unsafe void Store(float* data) => _mm_store_ps(data, P1);
+		public unsafe void Store(float* data) => _mm_storeu_ps(data, P1);
 
 		/// <summary>
-		/// Return a normalized copy of this Rotor
+		/// Store the 4 float components in a span
+		/// </summary>
+		public unsafe void Store(Span<float> data)
+		{
+			if (data.Length < 4)
+				throw new ArgumentOutOfRangeException(nameof(data));
+
+			fixed (float* p = data)
+			{
+				_mm_storeu_ps(p, P1);
+			}
+		}
+
+		/// <summary>
+		/// Deconstructs the components of the rotor <c>a + be₂₃ + ce₃₁ + de₁₂</c>
+		/// </summary>
+		public void Deconstruct(out float a, out float b, out float c, out float d)
+		{
+			a = Scalar;
+			b = E23;
+			c = E31;
+			d = E12;
+		}
+
+		/// <summary>
+		/// Return a normalized copy of this rotor
 		/// </summary>
 		/// <remarks>
-		/// Normalize a Rotor such that $\mathbf{r}\widetilde{\mathbf{r}} = 1$.
+		/// Normalizes a rotor <c>r</c> such that <c>r ~r = 1</c>.
 		/// </remarks>
 		public Rotor Normalized()
 		{
@@ -354,14 +378,14 @@ namespace KleinSharp
 
 		public float Scalar => P1.GetElement(0);
 
-		public float E12 => P1.GetElement(3);
-		public float E21 => -E12;
+		public float E23 => P1.GetElement(1);
+		public float E32 => -E23;
 
 		public float E31 => P1.GetElement(2);
 		public float E13 => -E31;
 
-		public float E23 => P1.GetElement(1);
-		public float E32 => -E23;
+		public float E12 => P1.GetElement(3);
+		public float E21 => -E12;
 
 		/// <summary>
 		/// Compute the square root of the provided rotor $r$.
@@ -383,7 +407,7 @@ namespace KleinSharp
 		/// </summary>
 		public Branch Log()
 		{
-			_mm_store_ss(out var cosAng, P1);
+			var cosAng = _mm_store_ss(P1);
 			float ang = MathF.Acos(cosAng);
 			float sin_ang = MathF.Sin(ang);
 
@@ -433,6 +457,21 @@ namespace KleinSharp
 		public static Rotor operator -(Rotor r)
 		{
 			return new Rotor(_mm_xor_ps(r.P1, _mm_set1_ps(-0f)));
+		}
+
+		/// <summary>
+		/// Formats the rotor as <c>a + be₂₃ + ce₃₁ + de₁₂</c>
+		/// Elements with zero components are dropped.
+		/// </summary>
+		public override string ToString()
+		{
+			var (a, b, c, d) = this;
+			return new StringBuilder(64)
+				.AppendScalar(a)
+				.AppendElement(b, "e₂₃")
+				.AppendElement(c, "e₃₁")
+				.AppendElement(d, "e₁₂")
+				.ZeroWhenEmpty();
 		}
 	}
 }

@@ -60,13 +60,21 @@ namespace KleinSharp.Tests
 		[TestMethod]
 		public void Copies_ToSpan()
 		{
-			var p1 = new Point(2, 3, 4);
-			var ps = p1.ToSpan();
+			var ps = new Span<float>(new float[4]);
+			new Point(2, 3, 4).Store(ps);
 			Assert.AreEqual(4, ps.Length);
 			Assert.AreEqual(1f, ps[0]);
 			Assert.AreEqual(2f, ps[1]);
 			Assert.AreEqual(3f, ps[2]);
 			Assert.AreEqual(4f, ps[3]);
+		}
+
+		[ExpectedException(typeof(ArgumentOutOfRangeException))]
+		[TestMethod]
+		public void Copies_ToTinySpan_Throws()
+		{
+			var ps = new Span<float>(new[] { 1f, 2f, 3f });
+			new Point(ps).Store(ps);
 		}
 
 		[TestMethod]

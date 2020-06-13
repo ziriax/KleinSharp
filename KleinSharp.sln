@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KleinSharp", "KleinSharp\Kl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KleinSharp.Tests", "KleinSharp.Tests\KleinSharp.Tests.csproj", "{60FCB22C-9594-4057-A028-D5A7FE054753}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KleinSharp.Perf", "KleinSharp.Perf\KleinSharp.Perf.csproj", "{6BDC8CCF-FC63-4C86-8848-0879C79E8FDA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{60FCB22C-9594-4057-A028-D5A7FE054753}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{60FCB22C-9594-4057-A028-D5A7FE054753}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{60FCB22C-9594-4057-A028-D5A7FE054753}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BDC8CCF-FC63-4C86-8848-0879C79E8FDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BDC8CCF-FC63-4C86-8848-0879C79E8FDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BDC8CCF-FC63-4C86-8848-0879C79E8FDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BDC8CCF-FC63-4C86-8848-0879C79E8FDA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

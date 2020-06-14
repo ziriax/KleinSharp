@@ -149,6 +149,12 @@ namespace KleinSharp
 		public Point this[Point p] => Conjugate(p);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Translator Sqrt()
+		{
+			return this * 0.5f;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Translator operator +(Translator a, Translator b)
 		{
 			return new Translator(_mm_add_ps(a.P2, b.P2));
@@ -180,6 +186,38 @@ namespace KleinSharp
 		{
 			return new Translator(_mm_mul_ps(t.P2, Detail.rcp_nr1(_mm_set1_ps(s))));
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Translator operator /(Translator a, Translator b)
+		{
+			return a * b.Inverse();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Motor operator *(Translator b, Rotor a)
+		{
+			var p1 = a.P1;
+			var p2 = Detail.gpRT(true, a.P1, b.P2);
+			return new Motor(p1, p2);
+		}
+
+		/// <summary>
+		/// Compose the action of two translators (this operation is commutative for these operands).
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Translator operator *(Translator a, Translator b)
+		{
+			return a + b;
+		}
+
+		/// Compose the action of a Translator and Motor (`b` will be applied, then `a`)
+		public static Motor operator *(Translator a, Motor b)
+		{
+			var p2 = Detail.gpRT(true, b.P1, a.P2);
+			p2 = _mm_add_ps(p2, b.P2);
+			return new Motor(b.P1, p2);
+		}
+
 
 		public override string ToString()
 		{

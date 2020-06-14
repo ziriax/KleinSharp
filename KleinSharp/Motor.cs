@@ -354,6 +354,35 @@ namespace KleinSharp
 			return new Motor(_mm_xor_ps(m.P1, flip), _mm_xor_ps(m.P2, flip));
 		}
 
+		/// Compose the action of a Rotor and Motor (`a` will be applied, then `b`)
+		public static Motor operator *(Motor b, Rotor a)
+		{
+			var p1 = Detail.gp11(b.P1, a.P1);
+			var p2 = Detail.gp12(true, a.P1, b.P2);
+			return new Motor(p1, p2);
+		}
+
+		/// Compose the action of a Translator and Motor (`a` will be applied, then `b`)
+		public static Motor operator *(Motor b, Translator a)
+		{
+			var p2 = Detail.gpRT(false, b.P1, a.P2);
+			p2 = _mm_add_ps(p2, b.P2);
+			return new Motor(b.P1, p2);
+		}
+
+		/// Compose the action of two motors (`b` will be applied, then `a`)
+		public static Motor operator *(Motor a, Motor b)
+		{
+			Detail.gpMM(a.P1, a.P2, b.P1, b.P2, out var p1, out var p2);
+			return new Motor(p1, p2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Motor operator /(Motor a, Motor b)
+		{
+			return a * b.Inverse();
+		}
+
 		/// <summary>
 		/// Conjugates an array of planes with this Motor in the input array and
 		/// stores the result in the output array. Aliasing is only permitted when
@@ -401,6 +430,12 @@ namespace KleinSharp
 		}
 
 		public Direction this[Direction item] => this.Conjugate(item);
+
+		public Motor Sqrt()
+		{
+			var p1 = _mm_add_ss(P1, _mm_set_ss(1f));
+			return new Motor(p1, P2).Normalized();
+		}
 
 		/// <summary>
 		/// Formats the motor as <c>a + be₂₃ + ce₃₁ + de₁₂ + ee₀₁ + fe₀₂ + ge₀₃ + he₀₁₂₃</c>

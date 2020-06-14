@@ -373,6 +373,33 @@ namespace KleinSharp
 			return r * s;
 		}
 
+		/// Composes two rotational actions such that the produced Rotor has the same
+		/// effect as applying Rotor $b$, then Rotor $a$.
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Rotor operator *(Rotor a, Rotor b)
+		{
+			var p1 = Detail.gp11(a.P1, b.P1);
+			return new Rotor(p1);
+		}
+
+
+		/// Compose the action of a Translator and Rotor (`b` will be applied, then `a`)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Motor operator *(Rotor a, Translator b)
+		{
+			var p2 = Detail.gpRT(false, a.P1, b.P2);
+			return new Motor(a.P1, p2);
+		}
+
+		/// Compose the action of a Rotor and Motor (`b` will be applied, then `a`)
+		public static Motor operator *(Rotor a, Motor b)
+		{
+			var p1 = Detail.gp11(a.P1, b.P1);
+			var p2 = Detail.gp12(false, a.P1, b.P2);
+			return new Motor(p1, p2);
+		}
+
+
 		public static Rotor operator /(Rotor r, float s)
 		{
 			return new Rotor(_mm_mul_ps(r.P1, Detail.rcp_nr1(_mm_set1_ps(s))));

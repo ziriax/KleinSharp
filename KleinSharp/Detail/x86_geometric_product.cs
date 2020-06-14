@@ -120,7 +120,7 @@ namespace KleinSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static void gp11(__m128 a, __m128 b, out __m128 p1_out)
+		public static __m128 gp11(__m128 a, __m128 b)
 		{
 			// (a0 b0 - a1 b1 - a2 b2 - a3 b3) +
 			// (a0 b1 - a2 b3 + a1 b0 + a3 b2)*e23
@@ -131,10 +131,10 @@ namespace KleinSharp
 			// coefficients with cartesian coordinates
 
 			// In general, we can get rid of at most one swizzle
-			p1_out = _mm_mul_ps(KLN_SWIZZLE(a, 0, 0, 0, 0), b);
+			var p1Out = _mm_mul_ps(KLN_SWIZZLE(a, 0, 0, 0, 0), b);
 
-			p1_out = _mm_sub_ps(
-				 p1_out,
+			p1Out = _mm_sub_ps(
+				 p1Out,
 				 _mm_mul_ps(KLN_SWIZZLE(a, 1, 3, 2, 1), KLN_SWIZZLE(b, 2, 1, 3, 1)));
 
 			// In a separate register, accumulate the later components so we can
@@ -147,7 +147,9 @@ namespace KleinSharp
 
 			__m128 tmp = _mm_xor_ps(_mm_add_ps(tmp1, tmp2), _mm_set_ss(-0f));
 
-			p1_out = _mm_add_ps(p1_out, tmp);
+			p1Out = _mm_add_ps(p1Out, tmp);
+
+			return p1Out;
 		}
 		// p3: (e123, e021, e013, e032) // p2: (e0123, e01, e02, e03) [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 gp33(__m128 a, __m128 b)
@@ -190,8 +192,10 @@ namespace KleinSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static void gpRT(bool flip, __m128 a, __m128 b, out __m128 p2)
+		public static __m128 gpRT(bool flip, __m128 a, __m128 b)
 		{
+			__m128 p2;
+
 			if (flip)
 			{
 				// (a1 b1 + a2 b2 + a3 b3) e0123 +
@@ -224,19 +228,27 @@ namespace KleinSharp
 						_mm_mul_ps(KLN_SWIZZLE(a, 1, 3, 2, 3),
 							KLN_SWIZZLE(b, 2, 1, 3, 3))));
 			}
+
+			return p2;
 		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void gp12(bool flip, __m128 a, __m128 b, out __m128 p2)
+		public static __m128 gp12(bool flip, __m128 a, __m128 b)
 		{
-			gpRT(flip, a, b, out p2);
+			var p2 = gpRT(flip, a, b);
 			p2 = _mm_sub_ps(p2,
 								 _mm_xor_ps(_mm_set_ss(-0f),
 												_mm_mul_ps(a, KLN_SWIZZLE(b, 0, 0, 0, 0))));
+			return p2;
 		}
 
-		// Optimized line * line operation
+		/// <summary>
+		/// Optimized line * line operation
+		/// (a,d) = first line P1, P2
+		/// (b,c) = second line P1, P2
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static unsafe void gpLL(__m128* l1, __m128* l2, __m128* res)
+		public static unsafe void gpLL(__m128 a, __m128 d, __m128 b, __m128 c, out __m128 p1, out __m128 p2)
 		{
 			// (-a1 b1 - a3 b3 - a2 b2) +
 			// (a2 b1 - a1 b2) e12 +
@@ -246,15 +258,7 @@ namespace KleinSharp
 			// (a3 c2 - a2 c3         + b2 d3 - b3 d2) e01 +
 			// (a1 c3 - a3 c1         + b3 d1 - b1 d3) e02 +
 			// (a2 c1 - a1 c2         + b1 d2 - b2 d1) e03 +
-			ref __m128 a = ref *l1;
-			ref __m128 d = ref *(l1 + 1);
-			ref __m128 b = ref *l2;
-			ref __m128 c = ref *(l2 + 1);
-
 			__m128 flip = _mm_set_ss(-0f);
-
-			ref __m128 p1 = ref *res;
-			ref __m128 p2 = ref *(res + 1);
 
 			p1 = _mm_mul_ps(KLN_SWIZZLE(a, 3, 1, 2, 1), KLN_SWIZZLE(b, 2, 3, 1, 1));
 			p1 = _mm_xor_ps(p1, flip);
@@ -284,7 +288,7 @@ namespace KleinSharp
 
 		// Optimized motor * motor operation
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static unsafe void gpMM(__m128* m1, __m128* m2, __m128* res)
+		public static unsafe void gpMM(__m128 a, __m128 b, __m128 c, __m128 d, out __m128 e, out __m128 f)
 		{
 			// (a0 c0 - a1 c1 - a2 c2 - a3 c3) +
 			// (a0 c1 + a3 c2 + a1 c0 - a2 c3) e23 +
@@ -299,14 +303,6 @@ namespace KleinSharp
 			//  e02 +
 			// (a0 d3 + b3 c0 + a2 d1 + b2 c1 - a3 d0 - a1 d2 - b0 c3 - b1 c2)
 			//  e03
-			ref __m128 a = ref *m1;
-			ref __m128 b = ref *(m1 + 1);
-			ref __m128 c = ref *m2;
-			ref __m128 d = ref *(m2 + 1);
-
-			ref __m128 e = ref *res;
-			ref __m128 f = ref *(res + 1);
-
 			__m128 a_xxxx = KLN_SWIZZLE(a, 0, 0, 0, 0);
 			__m128 a_zyzw = KLN_SWIZZLE(a, 3, 2, 1, 2);
 			__m128 a_ywyz = KLN_SWIZZLE(a, 2, 1, 3, 1);

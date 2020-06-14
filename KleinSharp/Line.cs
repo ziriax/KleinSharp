@@ -375,7 +375,7 @@ namespace KleinSharp
 
 		public static Plane operator |(Line b, Plane a)
 		{
-			return new Plane(Detail.dotPL(true , a.P0, b.P1, b.P2));
+			return new Plane(Detail.dotPL(true, a.P0, b.P1, b.P2));
 		}
 
 		public static float operator |(Line a, Line b)
@@ -388,6 +388,24 @@ namespace KleinSharp
 		{
 			return a | b;
 		}
+
+		/// <summary>
+		/// Generates a Motor $m$ that produces a screw motion about the common normal
+		/// to lines $a$ and $b$. The Motor given by $\sqrt{m}$ takes $b$ to $a$
+		/// provided that $a$ and $b$ are both normalized.
+		/// </summary>
+		public static Motor operator *(Line a, Line b)
+		{
+			Detail.gpLL(a.P1, a.P2, b.P1, b.P2, out var p1, out var p2);
+			return new Motor(p1, p2);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Motor operator /(Line a, Line b)
+		{
+			return a * b.Inverse();
+		}
+
 
 		/// <summary>
 		/// Convert the line through a branch (i.e. line parallel through the origin)

@@ -278,6 +278,20 @@ namespace KleinSharp
 			return a ^ b;
 		}
 
+		/// <summary>
+		/// Generate a Rotor $r$ such that $\widetilde{\sqrt{r}}$ takes Branch $b$ to Branch $a$.
+		/// </summary>
+		public static Rotor operator *(Branch a, Branch b)
+		{
+			return new Rotor(Detail.gp11(a.P1, b.P1));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Rotor operator /(Branch a, Branch b)
+		{
+			return a * b.Inverse();
+		}
+
 		public bool Equals(Branch other)
 		{
 			return P1.Equals(other.P1);

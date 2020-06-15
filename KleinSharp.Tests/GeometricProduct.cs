@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
+using static KleinSharp.Math;
 
 namespace KleinSharp.Tests
 {
@@ -25,7 +25,7 @@ namespace KleinSharp.Tests
 			Assert.AreEqual(2f, p12.e03);
 			Assert.AreEqual(0f, p12.e0123);
 
-			Plane p3 = (p1 * p2).Sqrt()[p2];
+			Plane p3 = Sqrt(p1 * p2)[p2];
 			Assert.IsTrue(p3.Equals(p1, Epsilon));
 
 			p1 = p1.Normalized();
@@ -96,7 +96,7 @@ namespace KleinSharp.Tests
 
 			b1 = b1.Normalized();
 			b2 = b2.Normalized();
-			Branch b3 = ~((b2 * b1).Sqrt())[b1];
+			Branch b3 = ~Sqrt(b2 * b1)[b1];
 			Assert.AreEqual(b2.X, b3.X, Epsilon);
 			Assert.AreEqual(b2.Y, b3.Y, Epsilon);
 			Assert.AreEqual(b2.Z, b3.Z, Epsilon);
@@ -132,7 +132,7 @@ namespace KleinSharp.Tests
 
 			l1 = l1.Normalized();
 			l2 = l2.Normalized();
-			Line l3 = (l1 * l2).Sqrt()[l2];
+			Line l3 = Sqrt(l1 * l2)[l2];
 			Assert.IsTrue(l3.Equals(-l1, 0.001f));
 		}
 
@@ -182,7 +182,7 @@ namespace KleinSharp.Tests
 			Assert.AreEqual(-1f, p1p2.e02, Epsilon);
 			Assert.AreEqual(1f, p1p2.e03, Epsilon);
 
-			Point p3 = p1p2.Sqrt()[p2];
+			Point p3 = Sqrt(p1p2)[p2];
 			Assert.AreEqual(1f, p3.X, Epsilon);
 			Assert.AreEqual(2f, p3.Y, Epsilon);
 			Assert.AreEqual(3f, p3.Z, Epsilon);

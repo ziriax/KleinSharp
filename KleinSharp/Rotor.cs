@@ -11,13 +11,6 @@ using static KleinSharp.Simd;
 
 namespace KleinSharp
 {
-	// public readonly struct EulerAngles
-	// {
-	// 	public readonly float roll;  // Rotation about x
-	// 	public readonly float pitch; // Rotation about y
-	// 	public readonly float yaw;   // Rotation about z
-	// };
-
 	/// <summary>
 	/// The Rotor is an entity that represents a rigid rotation about an axis.
 	/// To apply the Rotor to a supported entity, the call operator is available.
@@ -314,40 +307,6 @@ namespace KleinSharp
 
 		public float e12 => P1.GetElement(3);
 		public float e21 => -e12;
-
-		/// <summary>
-		/// Compute the square root of the provided rotor $r$.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Rotor Sqrt()
-		{
-			return new Rotor(Normalized(_mm_add_ss(P1, _mm_set_ss(1f))));
-		}
-
-		/// <summary>
-		/// Returns the principal Branch of this Rotor's logarithm. Invoking
-		/// `exp` on the returned `kln::Branch` maps back to this Rotor.
-		///
-		/// Given a Rotor $\cos\alpha + \sin\alpha\left[a\ee_{23} + b\ee_{31} +\
-		/// c\ee_{23}\right]$, the log is computed as simply
-		/// $\alpha\left[a\ee_{23} + b\ee_{31} + c\ee_{23}\right]$.
-		/// This map is only well-defined if the
-		/// Rotor is normalized such that $a^2 + b^2 + c^2 = 1$.
-		/// </summary>
-		public Branch Log()
-		{
-			var cosAng = _mm_store_ss(P1);
-			float ang = MathF.Acos(cosAng);
-			float sin_ang = MathF.Sin(ang);
-
-			var p1 = _mm_mul_ps(P1, Detail.rcp_nr1(_mm_set1_ps(sin_ang)));
-			p1 = _mm_mul_ps(p1, _mm_set1_ps(ang));
-			p1 = Sse41.IsSupported
-				? _mm_blend_ps(p1, _mm_setzero_ps(), 1)
-				: _mm_and_ps(p1, _mm_castsi128_ps(_mm_set_epi32(-1, -1, -1, 0)));
-
-			return new Branch(p1);
-		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Rotor operator +(Rotor a, Rotor b)

@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static KleinSharp.Basis;
+using static KleinSharp.Math;
 
 namespace KleinSharp.Tests
 {

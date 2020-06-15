@@ -406,6 +406,11 @@ namespace KleinSharp
 			return a * b.Inverse();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Plane operator &(Line b, Point a)
+		{
+			return a & b;
+		}
 
 		/// <summary>
 		/// Convert the line through a branch (i.e. line parallel through the origin)

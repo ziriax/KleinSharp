@@ -139,26 +139,6 @@ namespace KleinSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Branch Inverse() => new Branch(Inverse(P1));
 
-		public Rotor Sqrt()
-		{
-			return new Rotor(Rotor.Normalized(_mm_add_ss(P1, _mm_set_ss(1f))));
-		}
-
-		/// <summary>
-		/// Exponentiate a Branch to produce a Rotor.
-		/// </summary>
-		public Rotor Exp()
-		{
-			// Compute the Rotor angle
-			var ang = _mm_store_ss(Detail.sqrt_nr1(Detail.hi_dp(P1, P1)));
-			float cos_ang = MathF.Cos(ang);
-			float sin_ang = MathF.Sin(ang) / ang;
-
-			var p1 = _mm_mul_ps(_mm_set1_ps(sin_ang), P1);
-			p1 = _mm_add_ps(p1, _mm_set_ps(0f, 0f, 0f, cos_ang));
-			return new Rotor(p1);
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Branch operator +(Branch a, Branch b)
 		{
@@ -291,6 +271,13 @@ namespace KleinSharp
 		{
 			return a * b.Inverse();
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Plane operator &(Branch b, Point a)
+		{
+			return a & b;
+		}
+
 
 		public bool Equals(Branch other)
 		{

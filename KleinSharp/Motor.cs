@@ -431,12 +431,6 @@ namespace KleinSharp
 
 		public Direction this[Direction item] => this.Conjugate(item);
 
-		public Motor Sqrt()
-		{
-			var p1 = _mm_add_ss(P1, _mm_set_ss(1f));
-			return new Motor(p1, P2).Normalized();
-		}
-
 		/// <summary>
 		/// Formats the motor as <c>a + be₂₃ + ce₃₁ + de₁₂ + ee₀₁ + fe₀₂ + ge₀₃ + he₀₁₂₃</c>
 		/// Elements with zero components are dropped.

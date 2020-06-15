@@ -149,12 +149,6 @@ namespace KleinSharp
 		public Point this[Point p] => Conjugate(p);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Translator Sqrt()
-		{
-			return this * 0.5f;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Translator operator +(Translator a, Translator b)
 		{
 			return new Translator(_mm_add_ps(a.P2, b.P2));

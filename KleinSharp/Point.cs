@@ -283,7 +283,7 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Regressive product
+		/// Regressive product, aka join operator in PGA
 		/// TODO: Document!
 		/// </summary>
 		public static Line operator &(Point a, Point b)
@@ -292,7 +292,7 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Regressive product
+		/// Regressive product, aka join operator in PGA
 		/// TODO: Document!
 		/// </summary>
 		public static Plane operator &(Point a, Line b)
@@ -301,7 +301,7 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Regressive product
+		/// Regressive product, aka join operator in PGA
 		/// TODO: Document!
 		/// </summary>
 		public static Plane operator &(Point a, Branch b)
@@ -310,7 +310,7 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Regressive product
+		/// Regressive product, aka join operator in PGA
 		/// TODO: Document!
 		/// </summary>
 		public static Plane operator &(Point a, IdealLine b)
@@ -319,7 +319,7 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Regressive product
+		/// The regressive product is the <b>join</b> operator in PGA
 		/// TODO: Document!
 		/// </summary>
 		public static Dual operator &(Point a, Plane b)
@@ -328,7 +328,8 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Exterior aka outer aka wedge product
+		/// The exterior product is the <b>meet</b> operator in PGA
+		/// TODO: Document!
 		/// </summary>
 		public static Dual operator ^(Point b, Plane a)
 		{

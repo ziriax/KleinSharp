@@ -322,7 +322,7 @@ namespace KleinSharp
 		}
 
 		/// <summary>
-		/// Regressive product between plane and point.
+		/// Regressive product, aka join operator in PGA between plane and point.
 		/// </summary>
 		public static Dual operator &(Plane a, Point b)
 		{

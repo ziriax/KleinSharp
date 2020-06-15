@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
-using static KleinSharp.Basis;
+using static KleinSharp.Math;
 
 namespace KleinSharp.Perf
 {

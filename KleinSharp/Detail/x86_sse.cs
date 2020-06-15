@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿// ReSharper disable InconsistentNaming
+
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.X86;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;

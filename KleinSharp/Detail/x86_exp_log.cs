@@ -1,4 +1,6 @@
-﻿using System;
+﻿// ReSharper disable InconsistentNaming
+
+using System;
 using System.Runtime.CompilerServices;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
@@ -21,7 +23,7 @@ namespace KleinSharp
 		// Exponentiates the bivector and returns the motor defined by partitions 1
 		// and 2.
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe void exp(__m128 a, __m128 b, out __m128 p1_out, out __m128 p2_out)
+		public static void exp(__m128 a, __m128 b, out __m128 p1_out, out __m128 p2_out)
 		{
 			// The exponential map produces a continuous group of rotations about an
 			// axis. We'd *like* to evaluate the exp(a + b) as exp(a)exp(b) but we

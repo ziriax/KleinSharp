@@ -9,6 +9,28 @@ namespace KleinSharp.Perf
 	class Program
 	{
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+		static Plane ConjugatePlane()
+		{
+			var r = new Random();
+
+			var m = new Motor(
+				r.Next(-10, 10), r.Next(-10, 10), r.Next(-10, 10), r.Next(-10, 10),
+				r.Next(-10, 10), r.Next(-10, 10), r.Next(-10, 10), r.Next(-10, 10)
+			);
+
+			var p1 = new Plane(r.Next(-10, 10), r.Next(-10, 10), r.Next(-10, 10), r.Next(-10, 10));
+
+			Plane p2 = default;
+
+			for (long i = 0; i < long.MaxValue; ++i)
+			{
+				p2 = m[p1];
+			}
+
+			return p2;
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 		static (float, float, float) Deconstruct()
 		{
 			var r = new Random();
@@ -72,7 +94,8 @@ namespace KleinSharp.Perf
 
 			// Console.Title = Deconstruct().ToString();
 			// Console.Title = AddConstElements().ToString();
-			Console.Title = CreateLineElement().ToString();
+			//Console.Title = CreateLineElement().ToString();
+			Console.Title = ConjugatePlane().ToString();
 		}
 	}
 }

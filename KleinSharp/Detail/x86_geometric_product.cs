@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿// ReSharper disable InconsistentNaming
+
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.X86;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
@@ -248,7 +250,7 @@ namespace KleinSharp
 		/// (b,c) = second line P1, P2
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static unsafe void gpLL(__m128 a, __m128 d, __m128 b, __m128 c, out __m128 p1, out __m128 p2)
+		public static void gpLL(__m128 a, __m128 d, __m128 b, __m128 c, out __m128 p1, out __m128 p2)
 		{
 			// (-a1 b1 - a3 b3 - a2 b2) +
 			// (a2 b1 - a1 b2) e12 +
@@ -288,7 +290,7 @@ namespace KleinSharp
 
 		// Optimized motor * motor operation
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static unsafe void gpMM(__m128 a, __m128 b, __m128 c, __m128 d, out __m128 e, out __m128 f)
+		public static void gpMM(__m128 a, __m128 b, __m128 c, __m128 d, out __m128 e, out __m128 f)
 		{
 			// (a0 c0 - a1 c1 - a2 c2 - a3 c3) +
 			// (a0 c1 + a3 c2 + a1 c0 - a2 c3) e23 +

@@ -13,7 +13,7 @@ namespace KleinSharp
 	/// <summary>
 	/// A general Line in PGA is given as a 6-coordinate bivector with a direct  correspondence to Plücker coordinates.
 	/// <br/>
-	/// All Lines can be exponentiated using the <see cref="Line.Exp"></see> method to generate a motor.
+	/// All Lines can be exponentiated using the <see cref="Math.Exp(Line)"></see> method to generate a motor.
 	/// </summary>
 	/// <remarks>
 	/// Klein provides three Line classes: <see cref="Line"/>, <see cref="Branch"/>, and <see cref="IdealLine"/>.

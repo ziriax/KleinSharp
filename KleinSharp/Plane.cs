@@ -33,7 +33,7 @@ namespace KleinSharp
 	/// </p>
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Plane : IEquatable<Plane>
+	public readonly struct Plane : IEquatable<Plane>
 	{
 		public readonly __m128 P0;
 
@@ -154,6 +154,7 @@ namespace KleinSharp
 		/// performed via this method is an optimized routine equivalent to
 		/// the expression $p_1 p_2 p_1$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Plane Reflect(Plane p)
 		{
 			Detail.sw00(P0, p.P0, out var p0);
@@ -164,7 +165,8 @@ namespace KleinSharp
 		/// <p>Reflect line <i>L</i> through this plane <b>p</b>.</p>
 		/// <p>This an optimized routine equivalent to the expression <b>p</b> <i>L</i> <b>p</b></p>
 		/// </summary>
-		public Line Reflect(in Line l)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Line Reflect(Line l)
 		{
 			Detail.sw10(P0, l.P1, out var p1, out var p2);
 			p2 = _mm_add_ps(p2, Detail.sw20(P0, l.P2));

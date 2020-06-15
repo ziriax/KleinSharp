@@ -82,9 +82,6 @@ namespace KleinSharp
 		public static __m128 KLN_SWIZZLE(__m128 reg, int x, int y, int z, int w) => _mm_shuffle_ps(reg, reg, _MM_SHUFFLE(x, y, z, w));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe __m128 KLN_SWIZZLE(__m128* reg, int x, int y, int z, int w) => _mm_shuffle_ps(*reg, *reg, _MM_SHUFFLE(x, y, z, w));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe void _mm_store_ss(float* address, __m128 source) => Sse.StoreScalar(address, source);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

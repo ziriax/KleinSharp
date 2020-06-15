@@ -83,8 +83,9 @@ namespace KleinSharp
 
 		/// <summary>
 		/// Create a Rotor from Euler angles
+		/// <br/>
+		/// <a href="https://en.wikipedia.org/wiki/Aircraft_principal_axes"/>
 		/// </summary>
-		/// <seealso cref="https://en.wikipedia.org/wiki/Aircraft_principal_axes"/>
 		/// <param name="rollX">Rotation in radians about X axis</param>
 		/// <param name="pitchY">Rotation in radians about Y axis</param>
 		/// <param name="yawZ">Rotation in radians about Z axis</param>

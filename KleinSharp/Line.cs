@@ -98,16 +98,9 @@ namespace KleinSharp
 		/// <summary>
 		/// Store the 8 float components in a span
 		/// </summary>
-		public unsafe void Store(Span<float> data)
+		public void Store(Span<float> data)
 		{
-			if (data.Length < 8)
-				throw new ArgumentOutOfRangeException(nameof(data));
-
-			fixed (float* p = data)
-			{
-				_mm_storeu_ps(p, P1);
-				_mm_storeu_ps(p + 4, P2);
-			}
+			_mm_storeu_ps(data, P1, P2);
 		}
 
 		/// <summary>
@@ -256,7 +249,7 @@ namespace KleinSharp
 			return P1.Equals(other.P1) && P2.Equals(other.P2);
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is Line other && Equals(other);
 		}

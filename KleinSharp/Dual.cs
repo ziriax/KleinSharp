@@ -72,7 +72,7 @@ namespace KleinSharp
 			return P.Equals(other.P) && Q.Equals(other.Q);
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is Dual other && Equals(other);
 		}

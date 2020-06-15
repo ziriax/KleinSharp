@@ -50,7 +50,7 @@ namespace KleinSharp.Perf
 
 			for (long i = 0; i < long.MaxValue; ++i)
 			{
-				l = Line(-1, 2, -3, 4, -5, 6);
+				l = new Line(-1, 2, -3, 4, -5, 6);
 			}
 
 			return l;

@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using System.Text;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
@@ -12,7 +11,7 @@ using static KleinSharp.Simd;
 namespace KleinSharp
 {
 	/// <summary>
-	/// The Rotor is an entity that represents a rigid rotation about an axis.
+	/// The Rotor is an entity that represents a rigid rotation about an axis
 	/// To apply the Rotor to a supported entity, the call operator is available.
 	///
 	/// !!! example
@@ -54,18 +53,16 @@ namespace KleinSharp
 	/// translators and motors.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct Rotor : IConjugator<Plane>, IConjugator<Line>, IConjugator<Point>, IConjugator<Branch>, IConjugator<Direction>
+	public readonly struct Rotor :
+		IConjugator<Line>,
+		IConjugator<Point>,
+		IConjugator<Plane>,
+		IConjugator<Branch>,
+		IConjugator<Direction>
 	{
 		public readonly __m128 P1;
 
-		/// <summary>
-		/// Create a Rotor from Euler angles
-		/// </summary>
-		/// <seealso cref="https://en.wikipedia.org/wiki/Aircraft_principal_axes"/>
-		/// <param name="rollX">Rotation in radians about X axis</param>
-		/// <param name="pitchY">Rotation in radians about Y axis</param>
-		/// <param name="yawZ">Rotation in radians about Z axis</param>
-		public Rotor(float rollX, float pitchY, float yawZ)
+		internal Rotor(float rollX, float pitchY, float yawZ)
 		{
 			// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles#cite_note-3
 			float half_yaw = yawZ * 0.5f;
@@ -84,16 +81,26 @@ namespace KleinSharp
 				cos_r * cos_p * cos_y + sin_r * sin_p * sin_y);
 		}
 
+		/// <summary>
+		/// Create a Rotor from Euler angles
+		/// </summary>
+		/// <seealso cref="https://en.wikipedia.org/wiki/Aircraft_principal_axes"/>
+		/// <param name="rollX">Rotation in radians about X axis</param>
+		/// <param name="pitchY">Rotation in radians about Y axis</param>
+		/// <param name="yawZ">Rotation in radians about Z axis</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Rotor FromEulerAngles(float rollX, float pitchY, float yawZ)
+		{
+			return new Rotor(rollX, pitchY, yawZ);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Rotor(__m128 p1)
 		{
 			P1 = p1;
 		}
 
-		/// <summary>
-		/// Convenience constructor. Computes transcendentals and normalizes rotation axis.
-		/// </summary>
-		public Rotor(float angleInRadians, float x, float y, float z)
+		internal Rotor(float angleInRadians, float x, float y, float z)
 		{
 			float norm = MathF.Sqrt(x * x + y * y + z * z);
 			float inv_norm = 1f / norm;
@@ -108,6 +115,15 @@ namespace KleinSharp
 		}
 
 		/// <summary>
+		/// Convenience constructor. Computes transcendentals and normalizes rotation axis.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Rotor FromAngleAxis(float angleInRadians, float x, float y, float z)
+		{
+			return new Rotor(angleInRadians, x, y, z);
+		}
+
+		/// <summary>
 		/// Fast load operation for packed data that is already normalized.
 		/// <br/>
 		/// The argument `data` should point to a set of 4 float values with layout `(a, b, c, d)`,
@@ -119,29 +135,32 @@ namespace KleinSharp
 		/// That is, the rotor <c>r</c> must satisfy <c>r ~r = 1</c>.
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe Rotor(float* data)
+		public static unsafe Rotor LoadNormalized(float* data)
 		{
-			P1 = _mm_loadu_ps(data);
+			return new Rotor(_mm_loadu_ps(data));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Rotor LoadNormalized(ReadOnlySpan<float> data)
+		{
+			return new Rotor(_mm_loadu_ps(data));
 		}
 
 		/// <summary>
 		/// Store the 4 float components in memory
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe void Store(float* data) => _mm_storeu_ps(data, P1);
+		public unsafe void Store(float* data)
+		{
+			_mm_storeu_ps(data, P1);
+		}
 
 		/// <summary>
 		/// Store the 4 float components in a span
 		/// </summary>
-		public unsafe void Store(Span<float> data)
+		public void Store(Span<float> data)
 		{
-			if (data.Length < 4)
-				throw new ArgumentOutOfRangeException(nameof(data));
-
-			fixed (float* p = data)
-			{
-				_mm_storeu_ps(p, P1);
-			}
+			_mm_storeu_ps(data, P1);
 		}
 
 		/// <summary>
@@ -240,13 +259,37 @@ namespace KleinSharp
 		/// </summary>
 		public unsafe void Conjugate(Plane* input, Plane* output, int count)
 		{
-			Detail.sw012(false, &input->P0, P1, null, &output->P0, count);
+			Detail.sw012(false, &input->P0, P1, default, &output->P0, count);
 		}
+
+		public unsafe Plane Conjugate(Plane input)
+		{
+			__m128 res;
+			var p0 = input.P0;
+			Detail.sw012(false, &p0, P1, default, &res, 1);
+			return new Plane(res);
+		}
+
+		public Plane this[Plane p] => Conjugate(p);
+		public Plane[] this[ReadOnlySpan<Plane> input] => Conjugator.Apply(this, input);
+		public Span<Plane> this[ReadOnlySpan<Plane> input, Span<Plane> output] => Conjugator.Apply(this, input, output);
 
 		public unsafe void Conjugate(Branch* input, Branch* output, int count)
 		{
-			Detail.swMM(false, false, &input->P1, P1, null, &output->P1, count);
+			Detail.swMM(false, false, &input->P1, P1, default, &output->P1, count);
 		}
+
+		public unsafe Branch Conjugate(Branch input)
+		{
+			__m128 res;
+			var p1 = input.P1;
+			Detail.swMM(false, false, &p1, P1, default, &res, 1);
+			return new Branch(res);
+		}
+
+		public Branch this[Branch p] => Conjugate(p);
+		public Branch[] this[ReadOnlySpan<Branch> input] => Conjugator.Apply(this, input);
+		public Span<Branch> this[ReadOnlySpan<Branch> input, Span<Branch> output] => Conjugator.Apply(this, input, output);
 
 		/// Conjugates an array of lines with this Rotor in the input array and
 		/// stores the result in the output array. Aliasing is only permitted when
@@ -259,8 +302,19 @@ namespace KleinSharp
 		///     each line individually.
 		public unsafe void Conjugate(Line* input, Line* output, int count)
 		{
-			Detail.swMM(false, true, &input->P1, P1, null, &output->P1, count);
+			Detail.swMM(false, true, &input->P1, P1, default, &output->P1, count);
 		}
+
+		public unsafe Line Conjugate(Line input)
+		{
+			var res = stackalloc __m128[2];
+			Detail.swMM(false, true, &input.P1, P1, default, res, 1);
+			return new Line(res[0], res[1]);
+		}
+
+		public Line this[Line p] => Conjugate(p);
+		public Line[] this[ReadOnlySpan<Line> input] => Conjugator.Apply(this, input);
+		public Span<Line> this[ReadOnlySpan<Line> input, Span<Line> output] => Conjugator.Apply(this, input, output);
 
 		/// Conjugates an array of points with this Rotor in the input array and
 		/// stores the result in the output array. Aliasing is only permitted when
@@ -274,8 +328,19 @@ namespace KleinSharp
 		public unsafe void Conjugate(Point* input, Point* output, int count)
 		{
 			// NOTE: Conjugation of a plane and point with a Rotor is identical
-			Detail.sw012(false, &input->P3, P1, null, &output->P3, count);
+			Detail.sw012(false, &input->P3, P1, default, &output->P3, count);
 		}
+
+		public unsafe Point Conjugate(Point input)
+		{
+			__m128 p3;
+			Detail.sw012(false, &input.P3, P1, default, &p3, 1);
+			return new Point(p3);
+		}
+
+		public Point this[Point p] => Conjugate(p);
+		public Point[] this[ReadOnlySpan<Point> input] => Conjugator.Apply(this, input);
+		public Span<Point> this[ReadOnlySpan<Point> input, Span<Point> output] => Conjugator.Apply(this, input, output);
 
 		/// Conjugates an array of directions with this Rotor in the input array and
 		/// stores the result in the output array. Aliasing is only permitted when
@@ -288,14 +353,19 @@ namespace KleinSharp
 		///     each Direction individually.
 		public unsafe void Conjugate(Direction* input, Direction* output, int count)
 		{
-			Detail.sw012(false, &input->P3, P1, null, &output->P3, count);
+			Detail.sw012(false, &input->P3, P1, default, &output->P3, count);
 		}
 
-		public Plane this[Plane p] => this.Conjugate(p);
-		public Branch this[Branch p] => this.Conjugate(p);
-		public Point this[Point p] => this.Conjugate(p);
-		public Line this[Line p] => this.Conjugate(p);
-		public Direction this[Direction item] => this.Conjugate(item);
+		public unsafe Direction Conjugate(Direction input)
+		{
+			__m128 p3;
+			Detail.sw012(false, &input.P3, P1, default, &p3, 1);
+			return new Direction(p3);
+		}
+
+		public Direction this[Direction p] => Conjugate(p);
+		public Direction[] this[ReadOnlySpan<Direction> input] => Conjugator.Apply(this, input);
+		public Span<Direction> this[ReadOnlySpan<Direction> input, Span<Direction> output] => Conjugator.Apply(this, input, output);
 
 		public float Scalar => P1.GetElement(0);
 

@@ -259,7 +259,7 @@ namespace KleinSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe void swMM(
 			bool Translate, bool InputP2,
-			__m128* inp, __m128 b, __m128* c,
+			__m128* inp, __m128 b, __m128 c,
 			__m128* res, int count)
 		{
 			// p1 block
@@ -336,30 +336,30 @@ namespace KleinSharp
 
 			if (Translate)
 			{
-				__m128 czero = KLN_SWIZZLE(*c, 0, 0, 0, 0);
-				__m128 c_xzwy = KLN_SWIZZLE(*c, 1, 3, 2, 0);
-				__m128 c_xwyz = KLN_SWIZZLE(*c, 2, 1, 3, 0);
+				__m128 czero = KLN_SWIZZLE(c, 0, 0, 0, 0);
+				__m128 c_xzwy = KLN_SWIZZLE(c, 1, 3, 2, 0);
+				__m128 c_xwyz = KLN_SWIZZLE(c, 2, 1, 3, 0);
 
-				tmp4 = _mm_mul_ps(b, *c);
+				tmp4 = _mm_mul_ps(b, c);
 				tmp4 = _mm_sub_ps(
-					tmp4, _mm_mul_ps(b_yxxx, KLN_SWIZZLE(*c, 0, 0, 0, 1)));
+					tmp4, _mm_mul_ps(b_yxxx, KLN_SWIZZLE(c, 0, 0, 0, 1)));
 				tmp4 = _mm_sub_ps(tmp4,
 					_mm_mul_ps(KLN_SWIZZLE(b, 1, 3, 3, 2),
-						KLN_SWIZZLE(*c, 1, 3, 3, 2)));
+						KLN_SWIZZLE(c, 1, 3, 3, 2)));
 				tmp4 = _mm_sub_ps(tmp4,
 					_mm_mul_ps(KLN_SWIZZLE(b, 2, 1, 2, 3),
-						KLN_SWIZZLE(*c, 2, 1, 2, 3)));
+						KLN_SWIZZLE(c, 2, 1, 2, 3)));
 				tmp4 = _mm_add_ps(tmp4, tmp4);
 
 				tmp5 = _mm_mul_ps(b, c_xwyz);
 				tmp5 = _mm_add_ps(tmp5, _mm_mul_ps(b_xzwy, czero));
-				tmp5 = _mm_add_ps(tmp5, _mm_mul_ps(b_xwyz, *c));
+				tmp5 = _mm_add_ps(tmp5, _mm_mul_ps(b_xwyz, c));
 				tmp5 = _mm_sub_ps(tmp5, _mm_mul_ps(b_xxxx, c_xzwy));
 				tmp5 = _mm_mul_ps(tmp5, scale);
 
 				tmp6 = _mm_mul_ps(b, c_xzwy);
 				tmp6 = _mm_add_ps(tmp6, _mm_mul_ps(b_xxxx, c_xwyz));
-				tmp6 = _mm_add_ps(tmp6, _mm_mul_ps(b_xzwy, *c));
+				tmp6 = _mm_add_ps(tmp6, _mm_mul_ps(b_xzwy, c));
 				tmp6 = _mm_sub_ps(tmp6, _mm_mul_ps(b_xwyz, czero));
 				tmp6 = _mm_mul_ps(tmp6, scale);
 			}
@@ -408,7 +408,7 @@ namespace KleinSharp
 		// If Variadic is true, a and out must point to a contiguous block of memory
 		// equivalent to __m128[count]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe void sw012(bool Translate, __m128* a, __m128 b, __m128* c, __m128* res, int count)
+		public static unsafe void sw012(bool Translate, __m128* a, __m128 b, __m128 c, __m128* res, int count)
 		{
 			// LSB
 			//
@@ -478,14 +478,14 @@ namespace KleinSharp
 			__m128 tmp4 = default;
 			if (Translate)
 			{
-				tmp4 = _mm_mul_ps(b_xxxx, *c);
+				tmp4 = _mm_mul_ps(b_xxxx, c);
 				tmp4 = _mm_add_ps(
-					tmp4, _mm_mul_ps(b_xzwy, KLN_SWIZZLE(*c, 2, 1, 3, 0)));
-				tmp4 = _mm_add_ps(tmp4, _mm_mul_ps(b, KLN_SWIZZLE(*c, 0, 0, 0, 0)));
+					tmp4, _mm_mul_ps(b_xzwy, KLN_SWIZZLE(c, 2, 1, 3, 0)));
+				tmp4 = _mm_add_ps(tmp4, _mm_mul_ps(b, KLN_SWIZZLE(c, 0, 0, 0, 0)));
 
 				// NOTE: The high component of tmp4 is meaningless here
 				tmp4 = _mm_sub_ps(
-					tmp4, _mm_mul_ps(b_xwyz, KLN_SWIZZLE(*c, 1, 3, 2, 0)));
+					tmp4, _mm_mul_ps(b_xwyz, KLN_SWIZZLE(c, 1, 3, 2, 0)));
 				tmp4 = _mm_mul_ps(tmp4, dc_scale);
 			}
 
@@ -508,8 +508,8 @@ namespace KleinSharp
 		}
 
 		// Apply a motor to a point
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static unsafe void sw312(bool Translate, __m128* a, __m128 b, __m128* c, __m128* res, int count)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe void sw312(bool Translate, __m128* a, __m128 b, __m128 c, __m128* res, int count)
 		{
 			// LSB
 			// a0(b1^2 + b0^2 + b2^2 + b3^2) e123 +
@@ -563,11 +563,11 @@ namespace KleinSharp
 
 			if (Translate)
 			{
-				tmp4 = _mm_mul_ps(b_xzwy, KLN_SWIZZLE(*c, 2, 1, 3, 0));
-				tmp4 = _mm_sub_ps(tmp4, _mm_mul_ps(b_xxxx, *c));
+				tmp4 = _mm_mul_ps(b_xzwy, KLN_SWIZZLE(c, 2, 1, 3, 0));
+				tmp4 = _mm_sub_ps(tmp4, _mm_mul_ps(b_xxxx, c));
 				tmp4 = _mm_sub_ps(
-					 tmp4, _mm_mul_ps(b_xwyz, KLN_SWIZZLE(*c, 1, 3, 2, 0)));
-				tmp4 = _mm_sub_ps(tmp4, _mm_mul_ps(b, KLN_SWIZZLE(*c, 0, 0, 0, 0)));
+					 tmp4, _mm_mul_ps(b_xwyz, KLN_SWIZZLE(c, 1, 3, 2, 0)));
+				tmp4 = _mm_sub_ps(tmp4, _mm_mul_ps(b, KLN_SWIZZLE(c, 0, 0, 0, 0)));
 
 				// Mask low component and scale other components by 2
 				tmp4 = _mm_mul_ps(tmp4, two);

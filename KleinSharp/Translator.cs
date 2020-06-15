@@ -80,11 +80,16 @@ namespace KleinSharp
 		///     displacement.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe Translator(float* normalizedData)
+		public static unsafe Translator LoadNormalized(float* normalizedData)
 		{
-			P2 = _mm_loadu_ps(normalizedData);
+			return new Translator(_mm_loadu_ps(normalizedData));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Translator LoadNormalized(ReadOnlySpan<float> normalizedData)
+		{
+			return new Translator(_mm_loadu_ps(normalizedData));
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out float e01, out float e02, out float e03)

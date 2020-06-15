@@ -63,15 +63,9 @@ namespace KleinSharp
 			P0 = _mm_loadu_ps(data);
 		}
 
-		public unsafe Plane(Span<float> data)
+		public Plane(ReadOnlySpan<float> data)
 		{
-			if (data.Length < 4)
-				throw new ArgumentOutOfRangeException(nameof(data));
-
-			fixed (float* ptr = data)
-			{
-				P0 = _mm_loadu_ps(ptr);
-			}
+			P0 = _mm_loadu_ps(data);
 		}
 
 		/// <summary>
@@ -83,15 +77,9 @@ namespace KleinSharp
 		/// <summary>
 		/// Store the 4 float components in a span
 		/// </summary>
-		public unsafe void Store(Span<float> data)
+		public void Store(Span<float> data)
 		{
-			if (data.Length < 4)
-				throw new ArgumentOutOfRangeException(nameof(data));
-
-			fixed (float* p = data)
-			{
-				_mm_storeu_ps(p, P0);
-			}
+			_mm_storeu_ps(data, P0);
 		}
 
 		/// <summary>
@@ -329,7 +317,7 @@ namespace KleinSharp
 			return !(!a ^ !b);
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is Plane other && Equals(other);
 		}

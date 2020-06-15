@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Text;
+using KleinSharp;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
 // ReSharper disable InconsistentNaming
@@ -70,15 +71,9 @@ namespace KleinSharp
 			P3 = _mm_loadu_ps(data);
 		}
 
-		public unsafe Point(Span<float> data)
+		public Point(Span<float> data)
 		{
-			if (data.Length < 4)
-				throw new ArgumentOutOfRangeException(nameof(data));
-
-			fixed (float* ptr = data)
-			{
-				P3 = _mm_loadu_ps(ptr);
-			}
+			P3 = _mm_loadu_ps(data);
 		}
 
 		/// <summary>
@@ -112,15 +107,9 @@ namespace KleinSharp
 		/// <summary>
 		/// Store m128 contents into a span of at least 4 floats.
 		/// </summary>
-		public unsafe void Store(Span<float> data)
+		public void Store(Span<float> buffer)
 		{
-			if (data.Length < 4)
-				throw new ArgumentOutOfRangeException(nameof(data));
-
-			fixed (float* p = data)
-			{
-				_mm_storeu_ps(p, P3);
-			}
+			_mm_storeu_ps(buffer, P3);
 		}
 
 		/// <summary>
@@ -347,7 +336,7 @@ namespace KleinSharp
 			return P3.Equals(other.P3);
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is Point other && Equals(other);
 		}

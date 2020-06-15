@@ -284,7 +284,7 @@ namespace KleinSharp
 			return P1.Equals(other.P1);
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is Branch other && Equals(other);
 		}

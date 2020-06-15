@@ -66,7 +66,12 @@ namespace KleinSharp
 	/// [here](https://github.com/jeremyong/Klein/blob/master/test/test_exp_log.cpp#L48).
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct Motor : IConjugator<Plane>, IConjugator<Line>, IConjugator<Point>, IConjugator<Branch>, IConjugator<Direction>
+	public readonly struct Motor :
+		IConjugator<Line>,
+		IConjugator<Point>,
+		IConjugator<Plane>,
+		IConjugator<Branch>,
+		IConjugator<Direction>
 	{
 		public readonly __m128 P1;
 		public readonly __m128 P2;
@@ -87,14 +92,20 @@ namespace KleinSharp
 			P2 = _mm_set_ps(g, f, e, h);
 		}
 
+		internal Motor(float angRad, float d, Line l)
+		{
+			Detail.gpDL(-angRad * 0.5f, d * 0.5f, l.P1, l.P2, out var p1, out var p2);
+			Detail.exp(p1, p2, out P1, out P2);
+		}
+
 		/// <summary>
 		/// Produce a screw motion rotating and translating by given amounts along a
 		/// provided Euclidean axis.
 		/// </summary>
-		public Motor(float angRad, float d, Line l)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Motor Screw(float angRad, float d, Line l)
 		{
-			Detail.gpDL(-angRad * 0.5f, d * 0.5f, l.P1, l.P2, out var p1, out var p2);
-			Detail.exp(p1, p2, out P1, out P2);
+			return new Motor(angRad, d, l);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,16 +139,9 @@ namespace KleinSharp
 		/// <summary>
 		/// Store the 8 float components in a span
 		/// </summary>
-		public unsafe void Store(Span<float> data)
+		public void Store(Span<float> data)
 		{
-			if (data.Length < 8)
-				throw new ArgumentOutOfRangeException(nameof(data));
-
-			fixed (float* p = data)
-			{
-				_mm_storeu_ps(p, P1);
-				_mm_storeu_ps(p + 4, P2);
-			}
+			_mm_storeu_ps(data, P1, P2);
 		}
 
 		public float Scalar => P1.GetElement(0);
@@ -396,40 +400,84 @@ namespace KleinSharp
 		/// </summary>
 		public unsafe void Conjugate(Plane* input, Plane* output, int count)
 		{
-			var p2 = P2;
-			Detail.sw012(true, &input->P0, P1, &p2, &output->P0, count);
+			Detail.sw012(true, &input->P0, P1, P2, &output->P0, count);
 		}
 
-		public Plane this[Plane p] => this.Conjugate(p);
+		public unsafe Plane Conjugate(Plane input)
+		{
+			__m128 p0;
+			Detail.sw012(true, &input.P0, P1, P2, &p0, 1);
+			return new Plane(p0);
+		}
+
+		public Plane this[Plane p] => Conjugate(p);
+		public Plane[] this[ReadOnlySpan<Plane> input] => Conjugator.Apply(this, input);
+		public Span<Plane> this[ReadOnlySpan<Plane> input, Span<Plane> output] => Conjugator.Apply(this, input, output);
 
 		public unsafe void Conjugate(Branch* input, Branch* output, int count)
 		{
-			var p2 = P2;
-			Detail.swMM(true, true, &input->P1, P1, &p2, &output->P1, count);
+			Detail.swMM(true, true, &input->P1, P1, P2, &output->P1, count);
 		}
 
-		public Branch this[Branch p] => this.Conjugate(p);
+		public unsafe Branch Conjugate(Branch input)
+		{
+			__m128 p1;
+			Detail.swMM(true, true, &input.P1, P1, P2, &p1, 1);
+			return new Branch(p1);
+		}
+
+		public Branch this[Branch p] => Conjugate(p);
+		public Branch[] this[ReadOnlySpan<Branch> input] => Conjugator.Apply(this, input);
+		public Span<Branch> this[ReadOnlySpan<Branch> input, Span<Branch> output] => Conjugator.Apply(this, input, output);
+
 
 		public unsafe void Conjugate(Point* input, Point* output, int count)
 		{
-			var p2 = P2;
-			Detail.sw312(true, &input->P3, P1, &p2, &output->P3, count);
+			Detail.sw312(true, &input->P3, P1, P2, &output->P3, count);
 		}
 
-		public Point this[Point p] => this.Conjugate(p);
+		public unsafe Point Conjugate(Point input)
+		{
+			__m128 p3;
+			Detail.sw312(true, &input.P3, P1, P2, &p3, 1);
+			return new Point(p3);
+		}
+
+		public Point this[Point p] => Conjugate(p);
+		public Point[] this[ReadOnlySpan<Point> input] => Conjugator.Apply(this, input);
+		public Span<Point> this[ReadOnlySpan<Point> input, Span<Point> output] => Conjugator.Apply(this, input, output);
+
 		public unsafe void Conjugate(Line* input, Line* output, int count)
 		{
-			var p2 = P2;
-			Detail.swMM(true, true, &input->P1, P1, &p2, &output->P1, count);
+			Detail.swMM(true, true, &input->P1, P1, P2, &output->P1, count);
 		}
 
-		public Line this[Line p] => this.Conjugate(p);
+		public unsafe Line Conjugate(Line input)
+		{
+			var res = stackalloc __m128[2];
+			Detail.swMM(true, true, &input.P1, P1, P2, res, 1);
+			return new Line(res[0], res[1]);
+		}
+
+		public Line this[Line p] => Conjugate(p);
+		public Line[] this[ReadOnlySpan<Line> input] => Conjugator.Apply(this, input);
+		public Span<Line> this[ReadOnlySpan<Line> input, Span<Line> output] => Conjugator.Apply(this, input, output);
+
 		public unsafe void Conjugate(Direction* input, Direction* output, int count)
 		{
-			Detail.sw312(false, &input->P3, P1, null, &output->P3, count);
+			Detail.sw312(false, &input->P3, P1, default, &output->P3, count);
 		}
 
-		public Direction this[Direction item] => this.Conjugate(item);
+		public unsafe Direction Conjugate(Direction input)
+		{
+			__m128 p3;
+			Detail.sw312(false, &input.P3, P1, default, &p3, 1);
+			return new Direction(p3);
+		}
+
+		public Direction this[Direction p] => Conjugate(p);
+		public Direction[] this[ReadOnlySpan<Direction> input] => Conjugator.Apply(this, input);
+		public Span<Direction> this[ReadOnlySpan<Direction> input, Span<Direction> output] => Conjugator.Apply(this, input, output);
 
 		/// <summary>
 		/// Formats the motor as <c>a + be₂₃ + ce₃₁ + de₁₂ + ee₀₁ + fe₀₂ + ge₀₃ + he₀₁₂₃</c>

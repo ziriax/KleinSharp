@@ -25,7 +25,7 @@ namespace KleinSharp.Tests
 		[TestMethod]
 		public void Constructs_Plane()
 		{
-			var p = Plane(-2, 3, -4, 1);
+			var p = new Plane(-2, 3, -4, 1);
 
 			var (x, y, z, w) = p;
 
@@ -51,7 +51,7 @@ namespace KleinSharp.Tests
 		[TestMethod]
 		public void Construct_Point3()
 		{
-			var p = Point(-2, 3, -4);
+			var p = new Point(-2, 3, -4);
 
 			var (x, y, z, w) = p;
 
@@ -64,7 +64,7 @@ namespace KleinSharp.Tests
 		[TestMethod]
 		public void Construct_Point4()
 		{
-			var p = Point(-2, 3, -4, 1);
+			var p = new Point(-2, 3, -4, 1);
 
 			var (x, y, z, w) = p;
 
@@ -93,7 +93,7 @@ namespace KleinSharp.Tests
 		[TestMethod]
 		public void Constructs_Line()
 		{
-			var l = Line(-1, 2, -3, 4, -5, 6);
+			var l = new Line(-1, 2, -3, 4, -5, 6);
 
 			var (a, b, c, d, e, f) = l;
 
@@ -120,7 +120,7 @@ namespace KleinSharp.Tests
 		[TestMethod]
 		public void Construct_Direction()
 		{
-			var p = Direction(-2, 3, -4);
+			var p = new Direction(-2, 3, -4);
 
 			var (x, y, z) = p;
 
@@ -145,7 +145,7 @@ namespace KleinSharp.Tests
 		[TestMethod]
 		public void Construct_Branch()
 		{
-			var p = Branch(-2, 3, -4);
+			var p = new Branch(-2, 3, -4);
 
 			var (x, y, z) = p;
 
@@ -169,7 +169,7 @@ namespace KleinSharp.Tests
 		[TestMethod]
 		public void Construct_IdealLine()
 		{
-			var p = IdealLine(-2, 3, -4);
+			var p = new IdealLine(-2, 3, -4);
 
 			var (x, y, z) = p;
 

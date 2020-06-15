@@ -11,15 +11,12 @@ namespace KleinSharp
 	/// <summary>
 	/// KleinSharp static helper methods and fields.
 	/// 
-	/// `using static KleinSharp.Math` lets you import static KleinSharp math functions (log,exp,sqrt), constructor functions and fields.
+	/// `using static KleinSharp.Math` lets you import static KleinSharp math functions (log,exp,sqrt) and basis element fields.
 	///
 	/// The fields allow you to form elements by scaling and adding the various basis elements together.
 	/// <br/>
 	/// For example, to create a point (1,2,3), <c>use E1 + 2*E2 + 3*E3</c>
 	/// <br/>
-	/// With the constructor functions you don't have to call <c>new</c> everywhere.
-	/// <br/>
-	/// For example, to create the X-axis line, use <c>Branch(1, 0, 0)</c>
 	/// <br/>
 	/// <p>Exponential and Logarithm</p>
 	/// The group of rotations, translations, and screws (combined rotatation and
@@ -45,26 +42,7 @@ namespace KleinSharp
 	/// </remarks>
 	public static class Math
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Plane Plane(float a, float b, float c, float d) => new Plane(a, b, c, d);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Direction Direction(float x, float y, float z) => new Direction(x, y, z);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Point Point(float x, float y, float z) => new Point(x, y, z);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Point Point(float x, float y, float z, float w) => new Point(x, y, z, w);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Branch Branch(float a, float b, float c) => new Branch(a, b, c);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IdealLine IdealLine(float a, float b, float c) => new IdealLine(a, b, c);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Line Line(float a, float b, float c, float d, float e, float f) => new Line(a, b, c, d, e, f);
+		public static readonly Origin origin = default;
 
 		/// <summary>
 		/// e1 is the plane x=0, i.e. the YZ plane

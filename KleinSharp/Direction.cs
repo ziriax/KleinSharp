@@ -144,7 +144,7 @@ namespace KleinSharp
 			return P3.Equals(other.P3);
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return obj is Direction other && Equals(other);
 		}

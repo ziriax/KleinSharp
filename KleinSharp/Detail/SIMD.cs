@@ -1,5 +1,6 @@
 ﻿// ReSharper disable IdentifierTypo
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -113,10 +114,47 @@ namespace KleinSharp
 		public static unsafe void _mm_storeu_ps(float* address, __m128 source) => Sse.Store(address, source);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe void _mm_storeu_ps(Span<float> buffer, __m128 m1)
+		{
+			if (buffer.Length < 4)
+				throw new ArgumentOutOfRangeException(nameof(buffer));
+
+			fixed (float* p = buffer)
+			{
+				_mm_storeu_ps(p, m1);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe void _mm_storeu_ps(Span<float> buffer, __m128 m1, __m128 m2)
+		{
+			if (buffer.Length < 8)
+				throw new ArgumentOutOfRangeException(nameof(buffer));
+
+			fixed (float* p = buffer)
+			{
+				_mm_storeu_ps(p, m1);
+				_mm_storeu_ps(p + 4, m2);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe void _mm_store_aligned_ps(float* address, __m128 source) => Sse.StoreAligned(address, source);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe __m128 _mm_loadu_ps(float* address) => Sse.LoadVector128(address);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe __m128 _mm_loadu_ps(ReadOnlySpan<float> data)
+		{
+			if (data.Length < 4)
+				throw new ArgumentOutOfRangeException(nameof(data));
+
+			fixed (float* ptr = data)
+			{
+				return _mm_loadu_ps(ptr);
+			}
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 _mm_cmplt_ps(__m128 a, __m128 b) => Sse.CompareLessThan(a, b);

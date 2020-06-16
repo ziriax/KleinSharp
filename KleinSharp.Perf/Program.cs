@@ -9,6 +9,23 @@ namespace KleinSharp.Perf
 	class Program
 	{
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+		static Rotor RotorGA()
+		{
+			var r = new Random();
+			var r1 = Rotor.FromEulerAngles(r.Next(-10, 10), r.Next(-10, 10), r.Next(-10, 10));
+			var r2 = Rotor.FromEulerAngles(r.Next(-10, 10), r.Next(-10, 10), r.Next(-10, 10));
+
+			Rotor res = default;
+
+			for (long i = 0; i < long.MaxValue; ++i)
+			{
+				res = r1 * r2;
+			}
+
+			return res;
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 		static Plane ConjugatePlane()
 		{
 			var r = new Random();
@@ -95,7 +112,8 @@ namespace KleinSharp.Perf
 			// Console.Title = Deconstruct().ToString();
 			// Console.Title = AddConstElements().ToString();
 			//Console.Title = CreateLineElement().ToString();
-			Console.Title = ConjugatePlane().ToString();
+			// Console.Title = ConjugatePlane().ToString();
+			Console.Title = RotorGA().ToString();
 		}
 	}
 }

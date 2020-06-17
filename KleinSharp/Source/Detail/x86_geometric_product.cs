@@ -26,7 +26,7 @@ namespace KleinSharp
 		// p0: (e0, e1, e2, e3)
 		// p1: (1, e23, e31, e12)
 		// p2: (e0123, e01, e02, e03)
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void gp00(__m128 a, __m128 b, out __m128 p1_out, out __m128 p2_out)
 		{
 			// (a1 b1 + a2 b2 + a3 b3) +
@@ -62,7 +62,7 @@ namespace KleinSharp
 		// p3: (e123, e032, e013, e021)
 		// p1: (1, e12, e31, e23)
 		// p2: (e0123, e01, e02, e03)
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void gp03(bool flip, __m128 a, __m128 b, out __m128 p1, out __m128 p2)
 		{
 			if (flip)
@@ -121,7 +121,7 @@ namespace KleinSharp
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 gp11(__m128 a, __m128 b)
 		{
 			// (a0 b0 - a1 b1 - a2 b2 - a3 b3) +
@@ -154,6 +154,7 @@ namespace KleinSharp
 			return p1Out;
 		}
 		// p3: (e123, e021, e013, e032) // p2: (e0123, e01, e02, e03) [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 gp33(__m128 a, __m128 b)
 		{
 			// (-a0 b0) +
@@ -193,7 +194,7 @@ namespace KleinSharp
 			p2 = _mm_sub_ps(p2, _mm_mul_ps(b, v_vec));
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 gpRT(bool flip, __m128 a, __m128 b)
 		{
 			__m128 p2;
@@ -249,7 +250,7 @@ namespace KleinSharp
 		/// (a,d) = first line P1, P2
 		/// (b,c) = second line P1, P2
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void gpLL(__m128 a, __m128 d, __m128 b, __m128 c, out __m128 p1, out __m128 p2)
 		{
 			// (-a1 b1 - a3 b3 - a2 b2) +
@@ -289,7 +290,7 @@ namespace KleinSharp
 		}
 
 		// Optimized motor * motor operation
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void gpMM(__m128 a, __m128 b, __m128 c, __m128 d, out __m128 e, out __m128 f)
 		{
 			// (a0 c0 - a1 c1 - a2 c2 - a3 c3) +

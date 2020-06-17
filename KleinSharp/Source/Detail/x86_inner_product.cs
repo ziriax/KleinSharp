@@ -23,7 +23,7 @@ namespace KleinSharp
 		}
 
 		// The symmetric inner product on these two partitions commutes
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void dot03(__m128 a, __m128 b, out __m128 p1Out, out __m128 p2Out)
 		{
 			// (a2 b1 - a1 b2) e03 +

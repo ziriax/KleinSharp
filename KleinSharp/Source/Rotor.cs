@@ -101,6 +101,7 @@ namespace KleinSharp
 			P1 = p1;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal Rotor(float angleInRadians, float x, float y, float z)
 		{
 			float norm = MathF.Sqrt(x * x + y * y + z * z);
@@ -159,6 +160,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Store the 4 float components in a span
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Store(Span<float> data)
 		{
 			_mm_storeu_ps(data, P1);
@@ -189,12 +191,14 @@ namespace KleinSharp
 			return new Rotor(Normalized(P1));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static __m128 Normalized(__m128 p1)
 		{
 			__m128 invNorm = Detail.rsqrt_nr1(Detail.dp_bc(p1, p1));
 			return _mm_mul_ps(p1, invNorm);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 Inverse(__m128 p1)
 		{
 			__m128 inv_norm = Detail.rsqrt_nr1(Detail.hi_dp_bc(p1, p1));
@@ -212,17 +216,20 @@ namespace KleinSharp
 		/// <summary>
 		/// Returns a Rotor constrained to traverse the shortest arc
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Rotor Constrained()
 		{
 			__m128 mask = _mm_swizzle_ps(_mm_and_ps(P1, _mm_set_ss(-0f)), 0);
 			return new Rotor(_mm_xor_ps(mask, P1));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Rotor other)
 		{
 			return P1.Equals(other.P1);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Rotor other, float epsilon)
 		{
 			__m128 eps = _mm_set1_ps(epsilon);
@@ -231,6 +238,7 @@ namespace KleinSharp
 			return _mm_movemask_ps(cmp) != 0b1111;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public (float rollX, float pitchY, float yawZ) AsEulerAngles()
 		{
 			var (a, b, c, d) = this;
@@ -258,34 +266,32 @@ namespace KleinSharp
 		///     routine will be *significantly faster* than applying the Rotor to
 		///     each plane individually.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe void Conjugate(Plane* input, Plane* output, int count)
 		{
 			Detail.sw012(false, &input->P0, P1, default, &output->P0, count);
 		}
 
-		public unsafe Plane Conjugate(Plane input)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public Plane Conjugate(Plane input)
 		{
-			__m128 res;
-			var p0 = input.P0;
-			Detail.sw012(false, &p0, P1, default, &res, 1);
-			return new Plane(res);
+			return new Plane(Detail.sw012(false, input.P0, P1, default));
 		}
 
 		public Plane this[Plane p] => Conjugate(p);
 		public Plane[] this[ReadOnlySpan<Plane> input] => Conjugator.Apply(this, input);
 		public Span<Plane> this[ReadOnlySpan<Plane> input, Span<Plane> output] => Conjugator.Apply(this, input, output);
 
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe void Conjugate(Branch* input, Branch* output, int count)
 		{
 			Detail.swMM(false, false, &input->P1, P1, default, &output->P1, count);
 		}
 
-		public unsafe Branch Conjugate(Branch input)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public Branch Conjugate(Branch input)
 		{
-			__m128 res;
-			var p1 = input.P1;
-			Detail.swMM(false, false, &p1, P1, default, &res, 1);
-			return new Branch(res);
+			return new Branch(Detail.swMM(input.P1, P1));
 		}
 
 		public Branch this[Branch p] => Conjugate(p);
@@ -301,16 +307,17 @@ namespace KleinSharp
 		///     When applying a Rotor to a list of tightly packed lines, this
 		///     routine will be *significantly faster* than applying the Rotor to
 		///     each line individually.
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe void Conjugate(Line* input, Line* output, int count)
 		{
 			Detail.swMM(false, true, &input->P1, P1, default, &output->P1, count);
 		}
 
-		public unsafe Line Conjugate(Line input)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public Line Conjugate(Line input)
 		{
-			var res = stackalloc __m128[2];
-			Detail.swMM(false, true, &input.P1, P1, default, res, 1);
-			return new Line(res[0], res[1]);
+			var (p1, p2) = Detail.swMM(input.P1, input.P2, P1);
+			return new Line(p1, p2);
 		}
 
 		public Line this[Line p] => Conjugate(p);
@@ -326,17 +333,17 @@ namespace KleinSharp
 		///     When applying a Rotor to a list of tightly packed points, this
 		///     routine will be *significantly faster* than applying the Rotor to
 		///     each point individually.
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe void Conjugate(Point* input, Point* output, int count)
 		{
 			// NOTE: Conjugation of a plane and point with a Rotor is identical
 			Detail.sw012(false, &input->P3, P1, default, &output->P3, count);
 		}
 
-		public unsafe Point Conjugate(Point input)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public Point Conjugate(Point input)
 		{
-			__m128 p3;
-			Detail.sw012(false, &input.P3, P1, default, &p3, 1);
-			return new Point(p3);
+			return new Point(Detail.sw012(false, input.P3, P1, default));
 		}
 
 		public Point this[Point p] => Conjugate(p);
@@ -352,16 +359,16 @@ namespace KleinSharp
 		///     When applying a Rotor to a list of tightly packed directions, this
 		///     routine will be *significantly faster* than applying the Rotor to
 		///     each Direction individually.
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe void Conjugate(Direction* input, Direction* output, int count)
 		{
 			Detail.sw012(false, &input->P3, P1, default, &output->P3, count);
 		}
 
-		public unsafe Direction Conjugate(Direction input)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public Direction Conjugate(Direction input)
 		{
-			__m128 p3;
-			Detail.sw012(false, &input.P3, P1, default, &p3, 1);
-			return new Direction(p3);
+			return new Direction(Detail.sw012(false, input.P3, P1, default));
 		}
 
 		public Direction this[Direction p] => Conjugate(p);
@@ -422,6 +429,7 @@ namespace KleinSharp
 		}
 
 		/// Compose the action of a Rotor and Motor (`b` will be applied, then `a`)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator *(Rotor a, Motor b)
 		{
 			var p1 = Detail.gp11(a.P1, b.P1);
@@ -429,7 +437,7 @@ namespace KleinSharp
 			return new Motor(p1, p2);
 		}
 
-
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Rotor operator /(Rotor r, float s)
 		{
 			return new Rotor(_mm_mul_ps(r.P1, Detail.rcp_nr1(_mm_set1_ps(s))));

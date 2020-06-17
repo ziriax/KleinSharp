@@ -53,11 +53,13 @@ namespace KleinSharp
 	{
 		public readonly __m128 P2;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Translator(__m128 p2)
 		{
 			P2 = p2;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Translator(float delta, float x, float y, float z)
 		{
 			float norm = MathF.Sqrt(x * x + y * y + z * z);
@@ -119,6 +121,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Conjugates a plane $p$ with this Translator and returns the result $tp\widetilde{t}$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public Plane Conjugate(Plane p)
 		{
 			__m128 tmp = Sse41.IsSupported
@@ -131,16 +134,17 @@ namespace KleinSharp
 		/// <summary>
 		/// Conjugates a line $\ell$ with this Translator and returns the result $t\ell\widetilde{t}$.
 		/// </summary>
-		public unsafe Line Conjugate(in Line l)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public Line Conjugate(in Line l)
 		{
-			var res = stackalloc __m128[2];
-			Detail.swL2(l.P1, l.P2, P2, res);
-			return new Line(res);
+			var (p1, p2) = Detail.swL2(l.P1, l.P2, P2);
+			return new Line(p1, p2);
 		}
 
 		/// <summary>
 		/// Conjugates a point $p$ with this Translator and returns the result $tp\widetilde{t}$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public Point Conjugate(Point p)
 		{
 			return new Point(Detail.sw32(p.P3, P2));
@@ -181,6 +185,7 @@ namespace KleinSharp
 		}
 
 		/// Translator uniform inverse scale
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Translator operator /(Translator t, float s)
 		{
 			return new Translator(_mm_mul_ps(t.P2, Detail.rcp_nr1(_mm_set1_ps(s))));
@@ -210,13 +215,13 @@ namespace KleinSharp
 		}
 
 		/// Compose the action of a Translator and Motor (`b` will be applied, then `a`)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator *(Translator a, Motor b)
 		{
 			var p2 = Detail.gpRT(true, b.P1, a.P2);
 			p2 = _mm_add_ps(p2, b.P2);
 			return new Motor(b.P1, p2);
 		}
-
 
 		public override string ToString()
 		{

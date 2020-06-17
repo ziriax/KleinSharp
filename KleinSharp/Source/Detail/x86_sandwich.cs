@@ -1,6 +1,7 @@
 ﻿// ReSharper disable InconsistentNaming
 
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using __m128 = System.Runtime.Intrinsics.Vector128<float>;
 using static KleinSharp.Simd;
 
@@ -30,7 +31,7 @@ namespace KleinSharp
 
 		// Reflect a plane through another plane
 		// b * a * b
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void sw00(__m128 a, __m128 b, out __m128 p0_out)
 		{
 			// (2a0(a2 b2 + a3 b3 + a1 b1) - b0(a1^2 + a2^2 + a3^2)) e0 +
@@ -60,7 +61,7 @@ namespace KleinSharp
 			p0_out = _mm_add_ps(tmp, tmp2);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void sw10(__m128 a, __m128 b, out __m128 p1, out __m128 p2)
 		{
 			//                       b0(a1^2 + a2^2 + a3^2) +
@@ -97,7 +98,7 @@ namespace KleinSharp
 			p2 = _mm_swizzle_ps(p2, 120 /* 1, 3, 2, 0 */);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 sw20(__m128 a, __m128 b)
 		{
 			//                       -b0(a1^2 + a2^2 + a3^2) e0123 +
@@ -124,7 +125,7 @@ namespace KleinSharp
 			return p2;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 sw30(__m128 a, __m128 b)
 		{
 			//                                b0(a1^2 + a2^2 + a3^2)  e123 +
@@ -161,7 +162,7 @@ namespace KleinSharp
 		// p2: (e0123, e01, e02, e03)
 		// b * a * ~b
 		// The low component of p2 is expected to be the scalar component instead
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 sw02(__m128 a, __m128 b)
 		{
 			// (a0 b0^2 + 2a1 b0 b1 + 2a2 b0 b2 + 2a3 b0 b3) e0 +
@@ -201,8 +202,8 @@ namespace KleinSharp
 		// d := p2 input
 		// c := p2 translator
 		// out points to the start address of a line (p1, p2)
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static unsafe void swL2(__m128 a, __m128 d, __m128 c, __m128* res)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static (__m128, __m128) swL2(__m128 a, __m128 d, __m128 c)
 		{
 			// a0 +
 			// a1 e23 +
@@ -214,12 +215,9 @@ namespace KleinSharp
 			// (2(a3 c1 - a1 c3 - a2 c0) + d2) e02 +
 			// (2(a1 c2 - a2 c1 - a3 c0) + d3) e03
 
-			ref __m128 p1_out = ref *res;
-			ref __m128 p2_out = ref *(res + 1);
+			var p1_out = a;
 
-			p1_out = a;
-
-			p2_out = _mm_mul_ps(_mm_swizzle_ps(a, 120 /* 1, 3, 2, 0 */), _mm_swizzle_ps(c, 156 /* 2, 1, 3, 0 */));
+			var p2_out = _mm_mul_ps(_mm_swizzle_ps(a, 120 /* 1, 3, 2, 0 */), _mm_swizzle_ps(c, 156 /* 2, 1, 3, 0 */));
 
 			// Add and subtract the same quantity in the low component to produce a
 			// cancellation
@@ -231,6 +229,8 @@ namespace KleinSharp
 					_mm_set_ss(-0f)));
 			p2_out = _mm_add_ps(p2_out, p2_out);
 			p2_out = _mm_add_ps(p2_out, d);
+
+			return (p1_out, p2_out);
 		}
 
 		// Apply a translator to a point.
@@ -259,10 +259,7 @@ namespace KleinSharp
 		//
 		// Note: inp and out are permitted to alias iff a == out.
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe void swMM(
-			bool Translate, bool InputP2,
-			__m128* inp, __m128 b, __m128 c,
-			__m128* res, int count)
+		private static (__m128 tmp1, __m128 tmp2, __m128 tmp3) swMMRotation(__m128 b)
 		{
 			// p1 block
 			// a0(b0^2 + b1^2 + b2^2 + b3^2) +
@@ -278,13 +275,13 @@ namespace KleinSharp
 			__m128 b_yxxx = _mm_swizzle_ps(b, 1 /* 0, 0, 0, 1 */);
 			__m128 b_yxxx_2 = _mm_mul_ps(b_yxxx, b_yxxx);
 
-			__m128 tmp = _mm_mul_ps(b, b);
-			tmp = _mm_add_ps(tmp, b_yxxx_2);
+			__m128 tmp1 = _mm_mul_ps(b, b);
+			tmp1 = _mm_add_ps(tmp1, b_yxxx_2);
 			__m128 b_tmp = _mm_swizzle_ps(b, 158 /* 2, 1, 3, 2 */);
 			__m128 tmp2 = _mm_mul_ps(b_tmp, b_tmp);
 			b_tmp = _mm_swizzle_ps(b, 123 /* 1, 3, 2, 3 */);
 			tmp2 = _mm_add_ps(tmp2, _mm_mul_ps(b_tmp, b_tmp));
-			tmp = _mm_sub_ps(tmp, _mm_xor_ps(tmp2, _mm_set_ss(-0f)));
+			tmp1 = _mm_sub_ps(tmp1, _mm_xor_ps(tmp2, _mm_set_ss(-0f)));
 			// tmp needs to be scaled by a and set to p1_out
 
 			__m128 b_xxxx = _mm_swizzle_ps(b, 0 /* 0, 0, 0, 0 */);
@@ -331,40 +328,58 @@ namespace KleinSharp
 			// tmp2 scaled by (d0, d2, d3, d1) and added to p2
 			// tmp3 scaled by (d0, d3, d1, d2) and added to p2
 
+			return (tmp1, tmp2, tmp3);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static (__m128 tmp4, __m128 tmp5, __m128 tmp6) swMMTranslation(__m128 b, __m128 c)
+		{
+			__m128 b_xwyz = _mm_swizzle_ps(b, 156 /* 2, 1, 3, 0 */);
+			__m128 b_xzwy = _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */);
+			__m128 b_yxxx = _mm_swizzle_ps(b, 1 /* 0, 0, 0, 1 */);
+			__m128 b_xxxx = _mm_swizzle_ps(b, 0 /* 0, 0, 0, 0 */);
+			__m128 scale = _mm_set_ps(2f, 2f, 2f, 0f);
+
 			// Translation
-			__m128 tmp4 = default; // scaled by a and added to p2
-			__m128 tmp5 = default; // scaled by (a0, a3, a1, a2), added to p2
-			__m128 tmp6 = default; // scaled by (a0, a2, a3, a1), added to p2
+			__m128 czero = _mm_swizzle_ps(c, 0 /* 0, 0, 0, 0 */);
+			__m128 c_xzwy = _mm_swizzle_ps(c, 120 /* 1, 3, 2, 0 */);
+			__m128 c_xwyz = _mm_swizzle_ps(c, 156 /* 2, 1, 3, 0 */);
 
-			if (Translate)
-			{
-				__m128 czero = _mm_swizzle_ps(c, 0 /* 0, 0, 0, 0 */);
-				__m128 c_xzwy = _mm_swizzle_ps(c, 120 /* 1, 3, 2, 0 */);
-				__m128 c_xwyz = _mm_swizzle_ps(c, 156 /* 2, 1, 3, 0 */);
+			var tmp4 = _mm_mul_ps(b, c);
+			tmp4 = _mm_sub_ps(
+				tmp4, _mm_mul_ps(b_yxxx, _mm_swizzle_ps(c, 1 /* 0, 0, 0, 1 */)));
+			tmp4 = _mm_sub_ps(tmp4,
+				_mm_mul_ps(_mm_swizzle_ps(b, 126 /* 1, 3, 3, 2 */),
+					_mm_swizzle_ps(c, 126 /* 1, 3, 3, 2 */)));
+			tmp4 = _mm_sub_ps(tmp4,
+				_mm_mul_ps(_mm_swizzle_ps(b, 155 /* 2, 1, 2, 3 */),
+					_mm_swizzle_ps(c, 155 /* 2, 1, 2, 3 */)));
+			tmp4 = _mm_add_ps(tmp4, tmp4);
 
-				tmp4 = _mm_mul_ps(b, c);
-				tmp4 = _mm_sub_ps(
-					tmp4, _mm_mul_ps(b_yxxx, _mm_swizzle_ps(c, 1 /* 0, 0, 0, 1 */)));
-				tmp4 = _mm_sub_ps(tmp4,
-					_mm_mul_ps(_mm_swizzle_ps(b, 126 /* 1, 3, 3, 2 */),
-						_mm_swizzle_ps(c, 126 /* 1, 3, 3, 2 */)));
-				tmp4 = _mm_sub_ps(tmp4,
-					_mm_mul_ps(_mm_swizzle_ps(b, 155 /* 2, 1, 2, 3 */),
-						_mm_swizzle_ps(c, 155 /* 2, 1, 2, 3 */)));
-				tmp4 = _mm_add_ps(tmp4, tmp4);
+			var tmp5 = _mm_mul_ps(b, c_xwyz);
+			tmp5 = _mm_add_ps(tmp5, _mm_mul_ps(b_xzwy, czero));
+			tmp5 = _mm_add_ps(tmp5, _mm_mul_ps(b_xwyz, c));
+			tmp5 = _mm_sub_ps(tmp5, _mm_mul_ps(b_xxxx, c_xzwy));
+			tmp5 = _mm_mul_ps(tmp5, scale);
 
-				tmp5 = _mm_mul_ps(b, c_xwyz);
-				tmp5 = _mm_add_ps(tmp5, _mm_mul_ps(b_xzwy, czero));
-				tmp5 = _mm_add_ps(tmp5, _mm_mul_ps(b_xwyz, c));
-				tmp5 = _mm_sub_ps(tmp5, _mm_mul_ps(b_xxxx, c_xzwy));
-				tmp5 = _mm_mul_ps(tmp5, scale);
+			var tmp6 = _mm_mul_ps(b, c_xzwy);
+			tmp6 = _mm_add_ps(tmp6, _mm_mul_ps(b_xxxx, c_xwyz));
+			tmp6 = _mm_add_ps(tmp6, _mm_mul_ps(b_xzwy, c));
+			tmp6 = _mm_sub_ps(tmp6, _mm_mul_ps(b_xwyz, czero));
+			tmp6 = _mm_mul_ps(tmp6, scale);
 
-				tmp6 = _mm_mul_ps(b, c_xzwy);
-				tmp6 = _mm_add_ps(tmp6, _mm_mul_ps(b_xxxx, c_xwyz));
-				tmp6 = _mm_add_ps(tmp6, _mm_mul_ps(b_xzwy, c));
-				tmp6 = _mm_sub_ps(tmp6, _mm_mul_ps(b_xwyz, czero));
-				tmp6 = _mm_mul_ps(tmp6, scale);
-			}
+			return (tmp4, tmp5, tmp6);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe void swMM(
+			bool Translate, bool InputP2,
+			__m128* inp, __m128 b, __m128 c,
+			__m128* res, int count)
+		{
+			var (tmp1, tmp2, tmp3) = swMMRotation(b);
+
+			var (tmp4, tmp5, tmp6) = Translate ? swMMTranslation(b, c) : (__m128.Zero, __m128.Zero, __m128.Zero);
 
 			int stride = InputP2 ? 2 : 1;
 			for (int i = 0; i < count; ++i)
@@ -375,7 +390,7 @@ namespace KleinSharp
 
 				ref __m128 p1_out = ref res[stride * i];
 
-				p1_out = _mm_mul_ps(tmp, p1_in);
+				p1_out = _mm_mul_ps(tmp1, p1_in);
 				p1_out = _mm_add_ps(p1_out, _mm_mul_ps(tmp2, p1_in_xzwy));
 				p1_out = _mm_add_ps(p1_out, _mm_mul_ps(tmp3, p1_in_xwyz));
 
@@ -383,7 +398,7 @@ namespace KleinSharp
 				{
 					ref __m128 p2_in = ref inp[2 * i + 1]; // d
 					ref __m128 p2_out = ref res[2 * i + 1];
-					p2_out = _mm_mul_ps(tmp, p2_in);
+					p2_out = _mm_mul_ps(tmp1, p2_in);
 					p2_out = _mm_add_ps(
 						p2_out, _mm_mul_ps(tmp2, _mm_swizzle_ps(p2_in, 120 /* 1, 3, 2, 0 */)));
 					p2_out = _mm_add_ps(
@@ -402,6 +417,70 @@ namespace KleinSharp
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static (__m128, __m128) swMM(
+			__m128 inp1, __m128 inp2,
+			__m128 b, __m128 c)
+		{
+			var (tmp1, tmp2, tmp3) = swMMRotation(b);
+			var (tmp4, tmp5, tmp6) = swMMTranslation(b, c);
+
+			__m128 p1_in_xzwy = _mm_swizzle_ps(inp1, 120 /* 1, 3, 2, 0 */);
+			__m128 p1_in_xwyz = _mm_swizzle_ps(inp1, 156 /* 2, 1, 3, 0 */);
+
+			var p1_out = _mm_mul_ps(tmp1, inp1);
+			p1_out = _mm_add_ps(p1_out, _mm_mul_ps(tmp2, p1_in_xzwy));
+			p1_out = _mm_add_ps(p1_out, _mm_mul_ps(tmp3, p1_in_xwyz));
+
+			var p2_out = _mm_mul_ps(tmp1, inp2);
+			p2_out = _mm_add_ps(
+				p2_out, _mm_mul_ps(tmp2, _mm_swizzle_ps(inp2, 120 /* 1, 3, 2, 0 */)));
+			p2_out = _mm_add_ps(
+				p2_out, _mm_mul_ps(tmp3, _mm_swizzle_ps(inp2, 156 /* 2, 1, 3, 0 */)));
+
+			// Translate
+			p2_out = _mm_add_ps(p2_out, _mm_mul_ps(tmp4, inp1));
+			p2_out = _mm_add_ps(p2_out, _mm_mul_ps(tmp5, p1_in_xwyz));
+			p2_out = _mm_add_ps(p2_out, _mm_mul_ps(tmp6, p1_in_xzwy));
+
+			return (p1_out, p2_out);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static (__m128, __m128) swMM(__m128 inp1, __m128 inp2, __m128 b)
+		{
+			var (tmp1, tmp2, tmp3) = swMMRotation(b);
+
+			__m128 p1_in_xzwy = _mm_swizzle_ps(inp1, 120 /* 1, 3, 2, 0 */);
+			__m128 p1_in_xwyz = _mm_swizzle_ps(inp1, 156 /* 2, 1, 3, 0 */);
+
+			var p1_out = _mm_mul_ps(tmp1, inp1);
+			p1_out = _mm_add_ps(p1_out, _mm_mul_ps(tmp2, p1_in_xzwy));
+			p1_out = _mm_add_ps(p1_out, _mm_mul_ps(tmp3, p1_in_xwyz));
+
+			var p2_out = _mm_mul_ps(tmp1, inp2);
+			p2_out = _mm_add_ps(
+				p2_out, _mm_mul_ps(tmp2, _mm_swizzle_ps(inp2, 120 /* 1, 3, 2, 0 */)));
+			p2_out = _mm_add_ps(
+				p2_out, _mm_mul_ps(tmp3, _mm_swizzle_ps(inp2, 156 /* 2, 1, 3, 0 */)));
+
+			return (p1_out, p2_out);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static __m128 swMM(__m128 inp1, __m128 b)
+		{
+			var (tmp1, tmp2, tmp3) = swMMRotation(b);
+
+			__m128 p1_in_xzwy = _mm_swizzle_ps(inp1, 120 /* 1, 3, 2, 0 */);
+			__m128 p1_in_xwyz = _mm_swizzle_ps(inp1, 156 /* 2, 1, 3, 0 */);
+
+			var p1_out = _mm_mul_ps(tmp1, inp1);
+			p1_out = _mm_add_ps(p1_out, _mm_mul_ps(tmp2, p1_in_xzwy));
+			p1_out = _mm_add_ps(p1_out, _mm_mul_ps(tmp3, p1_in_xwyz));
+			return p1_out;
+		}
+
 		// Apply a motor to a plane
 		// a := p0
 		// b := p1
@@ -410,7 +489,7 @@ namespace KleinSharp
 		// If Variadic is true, a and out must point to a contiguous block of memory
 		// equivalent to __m128[count]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe void sw012(bool Translate, __m128* a, __m128 b, __m128 c, __m128* res, int count)
+		private static (__m128, __m128, __m128, __m128) sw012Common(bool Translate, __m128 b, __m128 c)
 		{
 			// LSB
 			//
@@ -491,6 +570,14 @@ namespace KleinSharp
 				tmp4 = _mm_mul_ps(tmp4, dc_scale);
 			}
 
+			return (tmp1, tmp2, tmp3, tmp4);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe void sw012(bool Translate, __m128* a, __m128 b, __m128 c, __m128* res, int count)
+		{
+			var (tmp1, tmp2, tmp3, tmp4) = sw012Common(Translate, b, c);
+
 			// The temporaries (tmp1, tmp2, tmp3, tmp4) strictly only have a
 			// dependence on b and c.
 			for (int i = 0; i < count; ++i)
@@ -509,9 +596,29 @@ namespace KleinSharp
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static __m128 sw012(bool Translate, __m128 a, __m128 b, __m128 c)
+		{
+			var (tmp1, tmp2, tmp3, tmp4) = sw012Common(Translate, b, c);
+
+			// The temporaries (tmp1, tmp2, tmp3, tmp4) strictly only have a dependence on b and c.
+			// Compute the lower block for components e1, e2, and e3
+			var p = _mm_mul_ps(tmp1, _mm_swizzle_ps(a, 120 /* 1, 3, 2, 0 */));
+			p = _mm_add_ps(p, _mm_mul_ps(tmp2, _mm_swizzle_ps(a, 156 /* 2, 1, 3, 0 */)));
+			p = _mm_add_ps(p, _mm_mul_ps(tmp3, a));
+
+			if (Translate)
+			{
+				__m128 tmp5 = hi_dp(tmp4, a);
+				p = _mm_add_ps(p, tmp5);
+			}
+
+			return p;
+		}
+
 		// Apply a motor to a point
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe void sw312(bool Translate, __m128* a, __m128 b, __m128 c, __m128* res, int count)
+		public static unsafe (__m128, __m128, __m128, __m128) sw312Common(bool Translate, __m128 b, __m128 c)
 		{
 			// LSB
 			// a0(b1^2 + b0^2 + b2^2 + b3^2) e123 +
@@ -576,6 +683,14 @@ namespace KleinSharp
 				// tmp4 needs to be scaled by (_, a0, a0, a0)
 			}
 
+			return (tmp1, tmp2, tmp3, tmp4);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe void sw312(bool Translate, __m128* a, __m128 b, __m128 c, __m128* res, int count)
+		{
+			var (tmp1, tmp2, tmp3, tmp4) = sw312Common(Translate, b, c);
+
 			for (int i = 0; i < count; ++i)
 			{
 				ref __m128 p = ref res[i];
@@ -591,10 +706,28 @@ namespace KleinSharp
 			}
 		}
 
+		// Apply a motor to one point
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static __m128 sw312(bool Translate, __m128 a, __m128 b, __m128 c)
+		{
+			var (tmp1, tmp2, tmp3, tmp4) = sw312Common(Translate, b, c);
+
+			var p = _mm_mul_ps(tmp1, _mm_swizzle_ps(a, 156 /* 2, 1, 3, 0 */));
+			p = _mm_add_ps(p, _mm_mul_ps(tmp2, _mm_swizzle_ps(a, 120 /* 1, 3, 2, 0 */)));
+			p = _mm_add_ps(p, _mm_mul_ps(tmp3, a));
+
+			if (Translate)
+			{
+				p = _mm_add_ps(p, _mm_mul_ps(tmp4, _mm_swizzle_ps(a, 0 /* 0, 0, 0, 0 */)));
+			}
+
+			return p;
+		}
+
 		// Conjugate origin with motor. Unlike other operations the motor MUST be
 		// normalized prior to usage b is the rotor component (p1) c is the
 		// translator component (p2)
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 swo12(__m128 b, __m128 c)
 		{
 			//  (b0^2 + b1^2 + b2^2 + b3^2) e123 +

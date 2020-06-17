@@ -52,6 +52,7 @@ namespace KleinSharp
 			e03 = this.e03;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public float SquaredIdealNorm()
 		{
 			var dp = Detail.hi_dp(P2, P2);
@@ -112,6 +113,7 @@ namespace KleinSharp
 			return new IdealLine(_mm_mul_ps(a.P2, _mm_set1_ps(s)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IdealLine operator /(IdealLine a, float s)
 		{
 			return new IdealLine(_mm_mul_ps(a.P2, Detail.rcp_nr1(_mm_set1_ps(s))));
@@ -145,6 +147,7 @@ namespace KleinSharp
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator |(IdealLine b, Plane a)
 		{
 			return new Plane(Detail.dotPIL(true, a.P0, b.P2));

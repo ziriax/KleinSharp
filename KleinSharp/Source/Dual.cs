@@ -16,12 +16,14 @@ namespace KleinSharp
 		public readonly float P;
 		public readonly float Q;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Dual(float p, float q)
 		{
 			P = p;
 			Q = q;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out float p, out float q)
 		{
 			p = P;
@@ -29,6 +31,7 @@ namespace KleinSharp
 		}
 
 		public float Scalar => P;
+
 		public float e0123 => Q;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -67,26 +70,31 @@ namespace KleinSharp
 			return new Dual(d.Q, d.P);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Dual other)
 		{
 			return P.Equals(other.P) && Q.Equals(other.Q);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			return obj is Dual other && Equals(other);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return HashCode.Combine(P, Q);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Dual left, Dual right)
 		{
 			return left.Equals(right);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(Dual left, Dual right)
 		{
 			return !left.Equals(right);

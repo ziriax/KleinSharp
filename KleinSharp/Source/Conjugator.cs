@@ -14,7 +14,7 @@ namespace KleinSharp
 
 	internal class Conjugator
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static unsafe Span<TElement> Apply<TSelf, TElement>(in TSelf self, ReadOnlySpan<TElement> input, Span<TElement> buffer)
 			where TSelf : IConjugator<TElement>
 			where TElement : unmanaged

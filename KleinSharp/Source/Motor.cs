@@ -70,7 +70,6 @@ namespace KleinSharp
 		IConjugator<Line>,
 		IConjugator<Point>,
 		IConjugator<Plane>,
-		IConjugator<Branch>,
 		IConjugator<Direction>
 	{
 		public readonly __m128 P1;
@@ -92,6 +91,7 @@ namespace KleinSharp
 			P2 = _mm_set_ps(g, f, e, h);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		internal Motor(float angRad, float d, Line l)
 		{
 			Detail.gpDL(-angRad * 0.5f, d * 0.5f, l.P1, l.P2, out var p1, out var p2);
@@ -139,6 +139,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Store the 8 float components in a span
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Store(Span<float> data)
 		{
 			_mm_storeu_ps(data, P1, P2);
@@ -177,6 +178,7 @@ namespace KleinSharp
 		}
 
 		/// Normalizes this Motor $m$ such that $m\widetilde{m} = 1$.
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static (__m128, __m128) Normalized(__m128 p1, __m128 p2)
 		{
 			// m = b + c where b is p1 and c is p2
@@ -215,13 +217,14 @@ namespace KleinSharp
 		}
 
 		/// Return a normalized copy of this Motor.
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public Motor Normalized()
 		{
 			var (p1, p2) = Normalized(P1, P2);
 			return new Motor(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static (__m128, __m128) Inverse(__m128 p1, __m128 p2)
 		{
 			// s, t computed as in the normalization
@@ -248,7 +251,7 @@ namespace KleinSharp
 			return (p1, p2);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public Motor Inverse()
 		{
 			var (p1, p2) = Inverse(P1, P2);
@@ -256,6 +259,7 @@ namespace KleinSharp
 		}
 
 		/// Constrains the Motor to traverse the shortest arc
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static (__m128, __m128) Constrained(__m128 p1, __m128 p2)
 		{
 			__m128 mask = _mm_swizzle_ps(_mm_and_ps(p1, _mm_set_ss(-0f)), 0);
@@ -272,6 +276,7 @@ namespace KleinSharp
 		}
 
 		/// Bitwise comparison
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Motor other)
 		{
 			__m128 p1Eq = _mm_cmpeq_ps(P1, other.P1);
@@ -280,6 +285,7 @@ namespace KleinSharp
 			return _mm_movemask_ps(eq) == 0xf;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Motor other, float epsilon)
 		{
 			__m128 eps = _mm_set1_ps(epsilon);
@@ -292,11 +298,13 @@ namespace KleinSharp
 			return _mm_movemask_ps(cmp) == 0xf;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Motor(Rotor r)
 		{
 			return new Motor(r.P1, _mm_setzero_ps());
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Motor(Translator t)
 		{
 			return new Motor(_mm_set_ss(1f), t.P2);
@@ -333,6 +341,7 @@ namespace KleinSharp
 			return l * s;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator /(Motor r, float s)
 		{
 			__m128 vs = Detail.rcp_nr1(_mm_set1_ps(s));
@@ -359,6 +368,7 @@ namespace KleinSharp
 		}
 
 		/// Compose the action of a Rotor and Motor (`a` will be applied, then `b`)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static Motor operator *(Motor b, Rotor a)
 		{
 			var p1 = Detail.gp11(b.P1, a.P1);
@@ -367,6 +377,7 @@ namespace KleinSharp
 		}
 
 		/// Compose the action of a Translator and Motor (`a` will be applied, then `b`)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static Motor operator *(Motor b, Translator a)
 		{
 			var p2 = Detail.gpRT(false, b.P1, a.P2);
@@ -375,6 +386,7 @@ namespace KleinSharp
 		}
 
 		/// Compose the action of two motors (`b` will be applied, then `a`)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static Motor operator *(Motor a, Motor b)
 		{
 			Detail.gpMM(a.P1, a.P2, b.P1, b.P2, out var p1, out var p2);
@@ -398,76 +410,62 @@ namespace KleinSharp
 		///     routine will be *significantly faster* than applying the Motor to
 		///     each Plane individually.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe void Conjugate(Plane* input, Plane* output, int count)
 		{
 			Detail.sw012(true, &input->P0, P1, P2, &output->P0, count);
 		}
 
-		public unsafe Plane Conjugate(Plane input)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public Plane Conjugate(Plane input)
 		{
-			__m128 p0;
-			Detail.sw012(true, &input.P0, P1, P2, &p0, 1);
-			return new Plane(p0);
+			return new Plane(Detail.sw012(true, input.P0, P1, P2));
 		}
 
 		public Plane this[Plane p] => Conjugate(p);
 		public Plane[] this[ReadOnlySpan<Plane> input] => Conjugator.Apply(this, input);
 		public Span<Plane> this[ReadOnlySpan<Plane> input, Span<Plane> output] => Conjugator.Apply(this, input, output);
 
-		public unsafe void Conjugate(Branch* input, Branch* output, int count)
-		{
-			Detail.swMM(true, true, &input->P1, P1, P2, &output->P1, count);
-		}
-
-		public unsafe Branch Conjugate(Branch input)
-		{
-			__m128 p1;
-			Detail.swMM(true, true, &input.P1, P1, P2, &p1, 1);
-			return new Branch(p1);
-		}
-
-		public Branch this[Branch p] => Conjugate(p);
-		public Branch[] this[ReadOnlySpan<Branch> input] => Conjugator.Apply(this, input);
-		public Span<Branch> this[ReadOnlySpan<Branch> input, Span<Branch> output] => Conjugator.Apply(this, input, output);
-
-
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe void Conjugate(Point* input, Point* output, int count)
 		{
 			Detail.sw312(true, &input->P3, P1, P2, &output->P3, count);
 		}
 
-		public unsafe Point Conjugate(Point input)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public Point Conjugate(Point input)
 		{
-			__m128 p3;
-			Detail.sw312(true, &input.P3, P1, P2, &p3, 1);
-			return new Point(p3);
+			return new Point(Detail.sw312(true, input.P3, P1, P2));
 		}
 
 		public Point this[Point p] => Conjugate(p);
 		public Point[] this[ReadOnlySpan<Point> input] => Conjugator.Apply(this, input);
 		public Span<Point> this[ReadOnlySpan<Point> input, Span<Point> output] => Conjugator.Apply(this, input, output);
 
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe void Conjugate(Line* input, Line* output, int count)
 		{
 			Detail.swMM(true, true, &input->P1, P1, P2, &output->P1, count);
 		}
 
-		public unsafe Line Conjugate(Line input)
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public Line Conjugate(Line input)
 		{
-			var res = stackalloc __m128[2];
-			Detail.swMM(true, true, &input.P1, P1, P2, res, 1);
-			return new Line(res[0], res[1]);
+			var (p1, p2) = Detail.swMM(input.P1, input.P2, P1, P2);
+			return new Line(p1, p2);
 		}
 
 		public Line this[Line p] => Conjugate(p);
 		public Line[] this[ReadOnlySpan<Line> input] => Conjugator.Apply(this, input);
 		public Span<Line> this[ReadOnlySpan<Line> input, Span<Line> output] => Conjugator.Apply(this, input, output);
 
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe void Conjugate(Direction* input, Direction* output, int count)
 		{
 			Detail.sw312(false, &input->P3, P1, default, &output->P3, count);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe Direction Conjugate(Direction input)
 		{
 			__m128 p3;

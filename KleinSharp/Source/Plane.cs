@@ -72,11 +72,15 @@ namespace KleinSharp
 		/// Store the 4 float components to memory
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe void Store(float* data) => _mm_storeu_ps(data, P0);
+		public unsafe void Store(float* data)
+		{
+			_mm_storeu_ps(data, P0);
+		}
 
 		/// <summary>
 		/// Store the 4 float components in a span
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Store(Span<float> data)
 		{
 			_mm_storeu_ps(data, P0);
@@ -104,6 +108,7 @@ namespace KleinSharp
 		/// 
 		/// Return a normalized copy of this Plane.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Plane Normalized()
 		{
 			__m128 invNorm = Detail.rsqrt_nr1(Detail.hi_dp_bc(P0, P0));
@@ -127,6 +132,7 @@ namespace KleinSharp
 			return _mm_store_ss(Detail.sqrt_nr1(Detail.hi_dp(P0, P0)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Plane Inverse()
 		{
 			__m128 p0 = P0;
@@ -136,11 +142,13 @@ namespace KleinSharp
 			return new Plane(p0);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Plane other)
 		{
 			return _mm_movemask_ps(_mm_cmpeq_ps(P0, other.P0)) == 0b1111;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Plane other, float epsilon)
 		{
 			__m128 eps = _mm_set1_ps(epsilon);
@@ -179,6 +187,7 @@ namespace KleinSharp
 		/// The operation performed via this index operator, e.g. p[Q],
 		/// is an optimized routine equivalent to the expression $p Q p$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Point Reflect(Point p) => new Point(Detail.sw30(P0, p.P3));
 
 		/// <summary>
@@ -237,6 +246,7 @@ namespace KleinSharp
 			return p * s;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator /(Plane p, float s)
 		{
 			return new Plane(_mm_mul_ps(p.P0, Detail.rcp_nr1(_mm_set1_ps(s))));
@@ -255,17 +265,20 @@ namespace KleinSharp
 		/// <returns>
 		/// The intersection line between the two planes (could be an ideal line for parallel planes)
 		/// </returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator ^(Plane a, Plane b)
 		{
 			Detail.ext00(a.P0, b.P0, out var p1, out var p2);
 			return new Line(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator ^(Plane a, Branch b)
 		{
 			return new Point(Detail.extPB(a.P0, b.P1));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator ^(Plane a, Line b)
 		{
 			var p3 = Detail.extPB(a.P0, b.P1);
@@ -274,26 +287,31 @@ namespace KleinSharp
 			return new Point(p3);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator ^(Plane a, Point b)
 		{
 			return new Dual(0, _mm_store_ss(Detail.ext03(false, a.P0, b.P3)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator ^(Plane a, IdealLine b)
 		{
 			return new Point(Detail.ext02(a.P0, b.P2));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator |(Plane a, IdealLine b)
 		{
 			return new Plane(Detail.dotPIL(false, a.P0, b.P2));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float operator |(Plane a, Plane b)
 		{
 			return _mm_store_ss(Detail.dot00(a.P0, b.P0));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator |(Plane a, Line b)
 		{
 			return new Plane(Detail.dotPL(false, a.P0, b.P1, b.P2));
@@ -306,6 +324,7 @@ namespace KleinSharp
 		/// If the plane is through the origin, then the dual corresponds to the normal of the plane.
 		/// TODO: Document other case
 		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator !(Plane p)
 		{
 			return new Point(p.P0);
@@ -314,26 +333,31 @@ namespace KleinSharp
 		/// <summary>
 		/// Regressive product, aka join operator in PGA between plane and point.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator &(Plane a, Point b)
 		{
 			return !(!a ^ !b);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			return obj is Plane other && Equals(other);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return P0.GetHashCode();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Plane left, Plane right)
 		{
 			return left.Equals(right);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(Plane left, Plane right)
 		{
 			return !left.Equals(right);
@@ -345,6 +369,7 @@ namespace KleinSharp
 		/// <returns>
 		/// The line ⊥ to the plane through the point
 		/// </returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator |(Plane a, Point b)
 		{
 			Detail.dot03(a.P0, b.P3, out var p1, out var p2);
@@ -364,12 +389,14 @@ namespace KleinSharp
 		///         // p3 will be approximately equal to p1
 		///     ```
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator *(Plane a, Plane b)
 		{
 			Detail.gp00(a.P0, b.P0, out var p1, out var p2);
 			return new Motor(p1, p2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator *(Plane a, Point b)
 		{
 			Detail.gp03(false, a.P0, b.P3, out var p1, out var p2);

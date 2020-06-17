@@ -23,6 +23,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Creates a normalized direction from coordinates
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Direction(float x, float y, float z)
 		{
 			__m128 dir = _mm_set_ps(z, y, x, 0f);
@@ -34,6 +35,7 @@ namespace KleinSharp
 		/// Creates a direction from a raw SIMD vector.
 		/// It is assumed the SIMD vector has 0 homogeneous coordinate.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Direction(__m128 p3)
 		{
 			P3 = p3;
@@ -41,6 +43,7 @@ namespace KleinSharp
 
 		/// Data should point to four floats with memory layout `(0f, x, y, z)`
 		/// where the zero occupies the lowest address in memory.
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe Direction(float* data)
 		{
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
@@ -48,6 +51,7 @@ namespace KleinSharp
 			P3 = _mm_loadu_ps(data);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out float x, out float y, out float z)
 		{
 			x = X;
@@ -74,6 +78,7 @@ namespace KleinSharp
 		/// Return a normalized direction by dividing all components by the
 		/// magnitude (for speed, `rsqrtps` is used with a single Newton-Raphson refinement iteration)
 		/// Return a normalized copy of this direction
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Direction Normalized()
 		{
 			__m128 tmp = Detail.rsqrt_nr1(Detail.hi_dp_bc(P3, P3));
@@ -128,6 +133,7 @@ namespace KleinSharp
 			return new Direction(_mm_mul_ps(a.P3, _mm_set1_ps(s)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Direction operator /(Direction a, float s)
 		{
 			return new Direction(_mm_mul_ps(a.P3, Detail.rcp_nr1(_mm_set1_ps(s))));
@@ -139,26 +145,31 @@ namespace KleinSharp
 			return new Point(d.P3);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Direction other)
 		{
 			return P3.Equals(other.P3);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			return obj is Direction other && Equals(other);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return P3.GetHashCode();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Direction left, Direction right)
 		{
 			return left.Equals(right);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(Direction left, Direction right)
 		{
 			return !left.Equals(right);

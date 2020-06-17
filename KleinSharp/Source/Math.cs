@@ -142,7 +142,7 @@ namespace KleinSharp
 		/// produce this motor again. The logarithm presumes that the motor is
 		/// normalized.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static Line Log(Motor m)
 		{
 			Detail.log(m.P1, m.P2, out var p1, out var p2);
@@ -156,7 +156,7 @@ namespace KleinSharp
 		/// or accelerate the motor's action. The line need not be a _simple bivector_
 		/// for the operation to be well-defined.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static Motor Exp(Line l)
 		{
 			Detail.exp(l.P1, l.P2, out var p1, out var p2);
@@ -184,6 +184,7 @@ namespace KleinSharp
 		/// $$\exp{\left[a\ee_{01} + b\ee_{02} + c\ee_{03}\right]} = 1 +\
 		/// a\ee_{01} + b\ee_{02} + c\ee_{03}$$
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Translator Exp(IdealLine il)
 		{
 			return new Translator(il.P2);
@@ -199,6 +200,7 @@ namespace KleinSharp
 		/// This map is only well-defined if the
 		/// rotor is normalized such that $a^2 + b^2 + c^2 = 1$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static Branch Log(Rotor r)
 		{
 			float cos_ang = _mm_store_ss(r.P1);
@@ -217,6 +219,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Exponentiate a branch to produce a rotor.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static Rotor Exp(Branch b)
 		{
 			// Compute the rotor angle
@@ -261,7 +264,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Compute the square root of the provided motor $m$.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static Motor Sqrt(Motor m)
 		{
 			var (p1, p2) = Motor.Normalized(_mm_add_ss(m.P1, _mm_set_ss(1f)), m.P2);

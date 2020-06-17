@@ -26,7 +26,7 @@ namespace KleinSharp
 		// p3: (e123, e032, e013, e021)
 
 		// Convert a motor to a column-major 4x4
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe void mat4x4_12(bool translated, bool normalized, __m128 b, __m128* c, __m128* res)
 		{
 			// The derivation of this conversion follows directly from the general

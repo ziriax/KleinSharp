@@ -103,6 +103,7 @@ namespace KleinSharp
 		/// distance between the two points (provided the points are
 		/// normalized). Returns $d^2 + e^2 + f^2$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public float SquaredNorm()
 		{
 			var dp = Detail.hi_dp(P1, P1);
@@ -118,7 +119,8 @@ namespace KleinSharp
 			return MathF.Sqrt(SquaredNorm());
 		}
 
-		public static __m128 Normalized(__m128 p)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static __m128 Normalized(__m128 p)
 		{
 			__m128 inv = Detail.rsqrt_nr1(Detail.hi_dp_bc(p, p));
 			return _mm_mul_ps(p, inv);
@@ -127,7 +129,8 @@ namespace KleinSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Branch Normalized() => new Branch(Normalized(P1));
 
-		public static __m128 Inverse(__m128 p)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static __m128 Inverse(__m128 p)
 		{
 			__m128 inv = Detail.rsqrt_nr1(Detail.hi_dp_bc(p, p));
 			p = _mm_mul_ps(p, inv);
@@ -211,6 +214,7 @@ namespace KleinSharp
 			return new Branch(_mm_mul_ps(b.P1, _mm_set1_ps(s)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Branch operator /(Branch b, float s)
 		{
 			return new Branch(_mm_mul_ps(b.P1, Detail.rcp_nr1(_mm_set1_ps(s))));
@@ -241,6 +245,7 @@ namespace KleinSharp
 			return new IdealLine(b.P1);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator ^(Branch a, IdealLine b)
 		{
 			return new Dual(0, _mm_store_ss(Detail.hi_dp_ss(a.P1, b.P2)));
@@ -261,6 +266,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Generate a Rotor $r$ such that $\widetilde{\sqrt{r}}$ takes Branch $b$ to Branch $a$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static Rotor operator *(Branch a, Branch b)
 		{
 			return new Rotor(Detail.gp11(a.P1, b.P1));
@@ -279,31 +285,37 @@ namespace KleinSharp
 		}
 
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Branch other)
 		{
 			return P1.Equals(other.P1);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			return obj is Branch other && Equals(other);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return P1.GetHashCode();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Branch left, Branch right)
 		{
 			return left.Equals(right);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(Branch left, Branch right)
 		{
 			return !left.Equals(right);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Line(Branch b)
 		{
 			return new Line(b);

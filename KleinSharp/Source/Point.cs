@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Text;
@@ -28,6 +29,7 @@ namespace KleinSharp
 
 		public readonly __m128 P3;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Point(__m128 p3)
 		{
 			P3 = p3;
@@ -36,6 +38,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Component-wise constructor (homogeneous coordinate is automatically initialized to 1)
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Point(float x, float y, float z)
 		{
 			P3 = _mm_set_ps(z, y, x, 1f);
@@ -44,6 +47,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Component-wise constructor, with explicit homogeneous coordinate w
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Point(float x, float y, float z, float w)
 		{
 			P3 = _mm_set_ps(z, y, x, w);
@@ -64,11 +68,13 @@ namespace KleinSharp
 		///     homogeneous coordinate `w` to be supplied as well in the lowest
 		///     address Pointed to by `data`.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe Point(float* data)
 		{
 			P3 = _mm_loadu_ps(data);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Point(Span<float> data)
 		{
 			P3 = _mm_loadu_ps(data);
@@ -79,6 +85,7 @@ namespace KleinSharp
 		/// <br/>
 		/// The point is assumed to be normalized, as the w component is not returned here.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out float x, out float y, out float z)
 		{
 			x = e032;
@@ -89,6 +96,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Deconstruct the components of the point <c>w e₁₂₃ + x e₀₃₂ + y e₀₁₃ + z e₀₂₁</c>
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Deconstruct(out float x, out float y, out float z, out float w)
 		{
 			x = e032;
@@ -100,11 +108,13 @@ namespace KleinSharp
 		/// <summary>
 		/// Store m128 contents into an array of 4 floats
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe void Store(float* data) => _mm_storeu_ps(data, P3);
 
 		/// <summary>
 		/// Store m128 contents into a span of at least 4 floats.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Store(Span<float> buffer)
 		{
 			_mm_storeu_ps(buffer, P3);
@@ -116,6 +126,7 @@ namespace KleinSharp
 		/// <remarks>
 		/// Division is done via rcpps with an additional Newton-Raphson refinement.
 		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Point Normalized()
 		{
 			__m128 tmp = Detail.rcp_nr1(_mm_swizzle_ps(P3, 0 /* 0, 0, 0, 0 */));
@@ -128,6 +139,7 @@ namespace KleinSharp
 		/// <remarks>
 		/// Division is done via rcpps with an additional Newton-Raphson refinement.
 		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Point Inverse()
 		{
 			__m128 p3 = P3;
@@ -157,26 +169,31 @@ namespace KleinSharp
 		public float E0 => e123;
 		public float W => e123;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator +(Point a, Point b)
 		{
 			return new Point(_mm_add_ps(a.P3, b.P3));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator -(Point a, Point b)
 		{
 			return new Point(_mm_sub_ps(a.P3, b.P3));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator *(Point p, float s)
 		{
 			return new Point(_mm_mul_ps(p.P3, _mm_set1_ps(s)));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator *(float s, Point p)
 		{
 			return p * s;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator /(Point p, float s)
 		{
 			return new Point(_mm_mul_ps(p.P3, Detail.rcp_nr1(_mm_set1_ps(s))));
@@ -185,6 +202,7 @@ namespace KleinSharp
 		/// <remarks>
 		/// Unary minus (leaves homogeneous component w untouched)
 		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator -(Point p)
 		{
 			return new Point(_mm_xor_ps(p.P3, _mm_set_ps(-0f, -0f, -0f, 0f)));
@@ -196,6 +214,7 @@ namespace KleinSharp
 		/// <remarks>
 		/// Reversion negates all components except the scalar. E.g. ~(1 + e₀₃) = 1 - e₀₃
 		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Point operator ~(Point p)
 		{
 			__m128 flip = _mm_set1_ps(-0f);
@@ -206,6 +225,7 @@ namespace KleinSharp
 		/// Generates a translator $t$ that produces a displacement along the line
 		/// between points $a$ and $b$. The translator given by $\sqrt{t}$ takes $b$ to $a$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Translator operator *(Point a, Point b)
 		{
 			return new Translator(Detail.gp33(a.P3, b.P3));
@@ -217,6 +237,7 @@ namespace KleinSharp
 		/// <returns>
 		/// TODO: Explain what the motor represents
 		/// </returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Motor operator *(Point b, Plane a)
 		{
 			Detail.gp03(true, a.P0, b.P3, out var p1, out var p2);
@@ -226,6 +247,7 @@ namespace KleinSharp
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Translator operator /(Point a, Point b)
 		{
 			return a * b.Inverse();
@@ -237,6 +259,7 @@ namespace KleinSharp
 		/// <returns>
 		/// The line ⊥ to the plane through the point
 		/// </returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator |(Point a, Plane b)
 		{
 			return b | a;
@@ -248,6 +271,7 @@ namespace KleinSharp
 		/// <returns>
 		/// The plane ⊥ to the line through the point
 		/// </returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator |(Point a, Line b)
 		{
 			return new Plane(Detail.dotPTL(a.P3, b.P1));
@@ -256,6 +280,7 @@ namespace KleinSharp
 		/// <summary>
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float operator |(Point a, Point b)
 		{
 			return Detail.dot33(a.P3, b.P3).GetElement(0);
@@ -264,6 +289,7 @@ namespace KleinSharp
 		/// <summary>
 		/// The dual of a point (a,b,c,d) is the plane ax + by + cz + d = 0
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator !(Point a)
 		{
 			return new Plane(a.P3);
@@ -273,6 +299,7 @@ namespace KleinSharp
 		/// Regressive product, aka join operator in PGA
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator &(Point a, Point b)
 		{
 			return !(!a ^ !b);
@@ -282,6 +309,7 @@ namespace KleinSharp
 		/// Regressive product, aka join operator in PGA
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator &(Point a, Line b)
 		{
 			return !(!a ^ !b);
@@ -291,6 +319,7 @@ namespace KleinSharp
 		/// Regressive product, aka join operator in PGA
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator &(Point a, Branch b)
 		{
 			return !(!a ^ !b);
@@ -300,6 +329,7 @@ namespace KleinSharp
 		/// Regressive product, aka join operator in PGA
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator &(Point a, IdealLine b)
 		{
 			return !(!a ^ !b);
@@ -309,6 +339,7 @@ namespace KleinSharp
 		/// The regressive product is the <b>join</b> operator in PGA
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator &(Point a, Plane b)
 		{
 			return !(!a ^ !b);
@@ -318,37 +349,44 @@ namespace KleinSharp
 		/// The exterior product is the <b>meet</b> operator in PGA
 		/// TODO: Document!
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator ^(Point b, Plane a)
 		{
 			__m128 tmp = Detail.ext03(true, a.P0, b.P3);
 			return new Dual(0, _mm_store_ss(tmp));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Point(Origin _)
 		{
 			return new Point(_mm_set_ss(1f));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Point other)
 		{
 			return P3.Equals(other.P3);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			return obj is Point other && Equals(other);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return P3.GetHashCode();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Point left, Point right)
 		{
 			return left.Equals(right);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(Point left, Point right)
 		{
 			return !left.Equals(right);

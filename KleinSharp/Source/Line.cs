@@ -89,6 +89,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Store the 8 float components into memory
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe void Store(float* data)
 		{
 			_mm_storeu_ps(data, P1);
@@ -98,6 +99,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Store the 8 float components in a span
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Store(Span<float> data)
 		{
 			_mm_storeu_ps(data, P1, P2);
@@ -144,6 +146,7 @@ namespace KleinSharp
 		/// distance between the two points (provided the points are
 		/// normalized). Returns $d^2 + e^2 + f^2$.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public float SquaredNorm()
 		{
 			__m128 dp = Detail.hi_dp(P1, P1);
@@ -151,7 +154,8 @@ namespace KleinSharp
 		}
 
 		/// Normalize a Line such that $\ell^2 = -1$.
-		public static (__m128, __m128) Normalized(__m128 p1, __m128 p2)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static (__m128, __m128) Normalized(__m128 p1, __m128 p2)
 		{
 			// l = b + c where b is p1 and c is p2
 			// l * ~l = |b|^2 - 2(b1 c1 + b2 c2 + b3 c3)e0123
@@ -174,13 +178,15 @@ namespace KleinSharp
 		}
 
 		/// Return a normalized copy of this Line
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public Line Normalized()
 		{
 			var (p1, p2) = Normalized(P1, P2);
 			return new Line(p1, p2);
 		}
 
-		public static (__m128 p1, __m128 p2) Inverse(__m128 p1, __m128 p2)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static (__m128 p1, __m128 p2) Inverse(__m128 p1, __m128 p2)
 		{
 			// s, t computed as in the normalization
 			__m128 b2 = Detail.hi_dp_bc(p1, p1);
@@ -205,7 +211,7 @@ namespace KleinSharp
 			return (p1, p2);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public Line Inverse()
 		{
 			var (p1, p2) = Inverse(P1, P2);
@@ -233,6 +239,7 @@ namespace KleinSharp
 		/// <summary>
 		/// Approximate equality test
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(in Line other, float epsilon)
 		{
 			__m128 eps = _mm_set1_ps(epsilon);
@@ -244,26 +251,31 @@ namespace KleinSharp
 			return _mm_movemask_ps(cmp) == 0xf;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Line other)
 		{
 			return P1.Equals(other.P1) && P2.Equals(other.P2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj)
 		{
 			return obj is Line other && Equals(other);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return HashCode.Combine(P1, P2);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(in Line left, in Line right)
 		{
 			return left.Equals(right);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(in Line left, in Line right)
 		{
 			return !left.Equals(right);
@@ -300,6 +312,7 @@ namespace KleinSharp
 			return l * s;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Line operator /(in Line r, float s)
 		{
 			__m128 vs = Detail.rcp_nr1(_mm_set1_ps(s));
@@ -347,6 +360,7 @@ namespace KleinSharp
 			return new Branch(a.P1) ^ b;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dual operator ^(Line a, Line b)
 		{
 			__m128 aP1bP2 = Detail.hi_dp_ss(a.P1, b.P2);
@@ -366,11 +380,13 @@ namespace KleinSharp
 			return new IdealLine(a.P2) ^ b;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Plane operator |(Line b, Plane a)
 		{
 			return new Plane(Detail.dotPL(true, a.P0, b.P1, b.P2));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float operator |(Line a, Line b)
 		{
 			return _mm_store_ss(Detail.dot11(a.P1, b.P1));
@@ -387,6 +403,7 @@ namespace KleinSharp
 		/// to lines $a$ and $b$. The Motor given by $\sqrt{m}$ takes $b$ to $a$
 		/// provided that $a$ and $b$ are both normalized.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static Motor operator *(Line a, Line b)
 		{
 			Detail.gpLL(a.P1, a.P2, b.P1, b.P2, out var p1, out var p2);

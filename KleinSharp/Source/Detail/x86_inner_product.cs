@@ -32,19 +32,16 @@ namespace KleinSharp
 			// a1 b0 e23 +
 			// a2 b0 e31 +
 			// a3 b0 e12
-			p1Out = _mm_mul_ps(a, KLN_SWIZZLE(b, 0, 0, 0, 0));
+			p1Out = _mm_mul_ps(a, _mm_swizzle_ps(b, 0 /* 0, 0, 0, 0 */));
 
 			p1Out = Sse41.IsSupported
 				? _mm_blend_ps(p1Out, _mm_setzero_ps(), 1)
 				: _mm_and_ps(p1Out, _mm_castsi128_ps(_mm_set_epi32(-1, -1, -1, 0)));
 
 			p2Out
-				= KLN_SWIZZLE(_mm_sub_ps(_mm_mul_ps(KLN_SWIZZLE(a, 1, 3, 2, 0), b),
-						_mm_mul_ps(a, KLN_SWIZZLE(b, 1, 3, 2, 0))),
-					1,
-					3,
-					2,
-					0);
+				= _mm_swizzle_ps(_mm_sub_ps(_mm_mul_ps(_mm_swizzle_ps(a, 120 /* 1, 3, 2, 0 */), b),
+						_mm_mul_ps(a, _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */))),
+					120 /* 1, 3, 2, 0 */);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -70,7 +67,7 @@ namespace KleinSharp
 			// -a0 b3 e3
 
 			__m128 dp = hi_dp_ss(a, b);
-			var p0 = _mm_mul_ps(KLN_SWIZZLE(a, 0, 0, 0, 0), b);
+			var p0 = _mm_mul_ps(_mm_swizzle_ps(a, 0 /* 0, 0, 0, 0 */), b);
 			p0 = _mm_xor_ps(p0, _mm_set_ps(-0f, -0f, -0f, 0f));
 			return Sse41.IsSupported ? _mm_blend_ps(p0, dp, 1) : _mm_add_ss(p0, dp);
 		}
@@ -101,9 +98,9 @@ namespace KleinSharp
 				// (a2 b3 - a3 b2) e1 +
 				// (a3 b1 - a1 b3) e2 +
 
-				p0 = _mm_mul_ps(a, KLN_SWIZZLE(b, 1, 3, 2, 0));
-				p0 = _mm_sub_ps(p0, _mm_mul_ps(KLN_SWIZZLE(a, 1, 3, 2, 0), b));
-				p0 = _mm_add_ss(KLN_SWIZZLE(p0, 1, 3, 2, 0), hi_dp_ss(a, c));
+				p0 = _mm_mul_ps(a, _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */));
+				p0 = _mm_sub_ps(p0, _mm_mul_ps(_mm_swizzle_ps(a, 120 /* 1, 3, 2, 0 */), b));
+				p0 = _mm_add_ss(_mm_swizzle_ps(p0, 120 /* 1, 3, 2, 0 */), hi_dp_ss(a, c));
 			}
 			else
 			{
@@ -112,9 +109,9 @@ namespace KleinSharp
 				// (a3 b2 - a2 b3) e1 +
 				// (a1 b3 - a3 b1) e2 +
 
-				p0 = _mm_mul_ps(KLN_SWIZZLE(a, 1, 3, 2, 0), b);
-				p0 = _mm_sub_ps(p0, _mm_mul_ps(a, KLN_SWIZZLE(b, 1, 3, 2, 0)));
-				p0 = _mm_sub_ss(KLN_SWIZZLE(p0, 1, 3, 2, 0), hi_dp_ss(a, c));
+				p0 = _mm_mul_ps(_mm_swizzle_ps(a, 120 /* 1, 3, 2, 0 */), b);
+				p0 = _mm_sub_ps(p0, _mm_mul_ps(a, _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */)));
+				p0 = _mm_sub_ss(_mm_swizzle_ps(p0, 120 /* 1, 3, 2, 0 */), hi_dp_ss(a, c));
 			}
 
 			return p0;

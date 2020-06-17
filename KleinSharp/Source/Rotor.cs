@@ -214,7 +214,7 @@ namespace KleinSharp
 		/// </summary>
 		public Rotor Constrained()
 		{
-			__m128 mask = KLN_SWIZZLE(_mm_and_ps(P1, _mm_set_ss(-0f)), 0, 0, 0, 0);
+			__m128 mask = _mm_swizzle_ps(_mm_and_ps(P1, _mm_set_ss(-0f)), 0);
 			return new Rotor(_mm_xor_ps(mask, P1));
 		}
 

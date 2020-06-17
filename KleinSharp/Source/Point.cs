@@ -118,7 +118,7 @@ namespace KleinSharp
 		/// </remarks>
 		public Point Normalized()
 		{
-			__m128 tmp = Detail.rcp_nr1(KLN_SWIZZLE(P3, 0, 0, 0, 0));
+			__m128 tmp = Detail.rcp_nr1(_mm_swizzle_ps(P3, 0 /* 0, 0, 0, 0 */));
 			return new Point(_mm_mul_ps(P3, tmp));
 		}
 
@@ -131,7 +131,7 @@ namespace KleinSharp
 		public Point Inverse()
 		{
 			__m128 p3 = P3;
-			__m128 invNorm = Detail.rcp_nr1(KLN_SWIZZLE(p3, 0, 0, 0, 0));
+			__m128 invNorm = Detail.rcp_nr1(_mm_swizzle_ps(p3, 0 /* 0, 0, 0, 0 */));
 			p3 = _mm_mul_ps(invNorm, p3);
 			p3 = _mm_mul_ps(invNorm, p3);
 			return new Point(p3);

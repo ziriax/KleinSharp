@@ -258,7 +258,7 @@ namespace KleinSharp
 		/// Constrains the Motor to traverse the shortest arc
 		internal static (__m128, __m128) Constrained(__m128 p1, __m128 p2)
 		{
-			__m128 mask = KLN_SWIZZLE(_mm_and_ps(p1, _mm_set_ss(-0f)), 0, 0, 0, 0);
+			__m128 mask = _mm_swizzle_ps(_mm_and_ps(p1, _mm_set_ss(-0f)), 0);
 			p1 = _mm_xor_ps(mask, p1);
 			p2 = _mm_xor_ps(mask, p2);
 			return (p1, p2);

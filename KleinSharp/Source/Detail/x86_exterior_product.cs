@@ -26,16 +26,13 @@ namespace KleinSharp
 			// (a0 b2 - a2 b0) e02 +
 			// (a0 b3 - a3 b0) e03
 
-			p1Out = _mm_mul_ps(a, KLN_SWIZZLE(b, 1, 3, 2, 0));
-			p1Out = KLN_SWIZZLE(
-				 _mm_sub_ps(p1Out, _mm_mul_ps(KLN_SWIZZLE(a, 1, 3, 2, 0), b)),
-				 1,
-				 3,
-				 2,
-				 0);
+			p1Out = _mm_mul_ps(a, _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */));
+			p1Out = _mm_swizzle_ps(
+				 _mm_sub_ps(p1Out, _mm_mul_ps(_mm_swizzle_ps(a, 120 /* 1, 3, 2, 0 */), b)),
+				 120 /* 1, 3, 2, 0*/);
 
-			p2Out = _mm_mul_ps(KLN_SWIZZLE(a, 0, 0, 0, 0), b);
-			p2Out = _mm_sub_ps(p2Out, _mm_mul_ps(a, KLN_SWIZZLE(b, 0, 0, 0, 0)));
+			p2Out = _mm_mul_ps(_mm_swizzle_ps(a, 0 /* 0, 0, 0, 0 */), b);
+			p2Out = _mm_sub_ps(p2Out, _mm_mul_ps(a, _mm_swizzle_ps(b, 0 /* 0, 0, 0, 0 */)));
 
 			// For both outputs above, we don't zero the lowest component because
 			// we've arranged a cancelation
@@ -50,7 +47,7 @@ namespace KleinSharp
 			// (-a0 b2) e013 +
 			// (-a0 b3) e021
 			var p3Out = _mm_mul_ps(
-				_mm_mul_ps(KLN_SWIZZLE(a, 0, 0, 0, 1), b),
+				_mm_mul_ps(_mm_swizzle_ps(a, 1 /* 0, 0, 0, 1 */), b),
 				_mm_set_ps(-1f, -1f, -1f, 0f));
 
 			p3Out = _mm_add_ss(p3Out, hi_dp(a, b));
@@ -66,13 +63,10 @@ namespace KleinSharp
 			// (a2 b3 - a3 b2) e032 +
 			// (a3 b1 - a1 b3) e013 +
 
-			var p3Out = _mm_mul_ps(a, KLN_SWIZZLE(b, 1, 3, 2, 0));
-			p3Out = KLN_SWIZZLE(
-				 _mm_sub_ps(p3Out, _mm_mul_ps(KLN_SWIZZLE(a, 1, 3, 2, 0), b)),
-				 1,
-				 3,
-				 2,
-				 0);
+			var p3Out = _mm_mul_ps(a, _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */));
+			p3Out = _mm_swizzle_ps(
+				 _mm_sub_ps(p3Out, _mm_mul_ps(_mm_swizzle_ps(a, 120 /* 1, 3, 2, 0 */), b)),
+				 120 /* 1, 3, 2, 0 */);
 
 			return p3Out;
 		}

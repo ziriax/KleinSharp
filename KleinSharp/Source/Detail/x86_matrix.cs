@@ -67,9 +67,9 @@ namespace KleinSharp
 			// 2(b2 b0 + b1 b3)
 			// 0
 			ref __m128 c0 = ref res[0];
-			c0 = _mm_mul_ps(b, KLN_SWIZZLE(b, 0, 0, 2, 0));
+			c0 = _mm_mul_ps(b, _mm_swizzle_ps(b, 8 /* 0, 0, 2, 0 */));
 			__m128 tmp
-				 = _mm_mul_ps(KLN_SWIZZLE(b, 0, 1, 3, 1), KLN_SWIZZLE(b, 0, 3, 0, 1));
+				 = _mm_mul_ps(_mm_swizzle_ps(b, 29 /* 0, 1, 3, 1 */), _mm_swizzle_ps(b, 49 /* 0, 3, 0, 1 */));
 			tmp = _mm_xor_ps(_mm_set_ps(0f, 0f, -0f, 0f), tmp);
 			c0 = _mm_mul_ps(_mm_set_ps(0f, 2f, 2f, 1f), _mm_add_ps(c0, tmp));
 			c0 = _mm_sub_ps(c0, _mm_set_ss(b3_2 + b2_2));
@@ -81,8 +81,8 @@ namespace KleinSharp
 			// 2(b2 b3 - b0 b1)
 			// 0
 			ref __m128 c1 = ref res[1];
-			c1 = _mm_mul_ps(b, KLN_SWIZZLE(b, 0, 3, 1, 3));
-			tmp = _mm_mul_ps(KLN_SWIZZLE(b, 0, 0, 3, 2), KLN_SWIZZLE(b, 0, 1, 3, 1));
+			c1 = _mm_mul_ps(b, _mm_swizzle_ps(b, 55 /* 0, 3, 1, 3 */));
+			tmp = _mm_mul_ps(_mm_swizzle_ps(b, 14 /* 0, 0, 3, 2 */), _mm_swizzle_ps(b, 29 /* 0, 1, 3, 1 */));
 			tmp = _mm_xor_ps(_mm_set_ps(0f, -0f, 0f, 0f), tmp);
 			c1 = _mm_mul_ps(_mm_set_ps(0f, 2f, -1f, 2f), _mm_add_ps(c1, tmp));
 			c1 = _mm_add_ps(c1, _mm_set_ps(0f, 0f, b0_2 + b2_2, 0f));
@@ -95,9 +95,9 @@ namespace KleinSharp
 			// 0
 			ref __m128 c2 = ref res[2];
 			c2 = _mm_xor_ps(_mm_set_ps(0f, -0f, 0f, -0f),
-								 _mm_mul_ps(b, KLN_SWIZZLE(b, 0, 2, 0, 2)));
+								 _mm_mul_ps(b, _mm_swizzle_ps(b, 34 /* 0, 2, 0, 2 */)));
 			c2 = _mm_add_ps(
-				 c2, _mm_mul_ps(KLN_SWIZZLE(b, 0, 0, 2, 1), KLN_SWIZZLE(b, 0, 0, 3, 3)));
+				 c2, _mm_mul_ps(_mm_swizzle_ps(b, 9 /* 0, 0, 2, 1 */), _mm_swizzle_ps(b, 15 /* 0, 0, 3, 3 */)));
 			c2 = _mm_mul_ps(c2, _mm_set_ps(0f, 1f, 2f, 2f));
 			c2 = _mm_add_ps(c2, _mm_set_ps(0f, b3_2 - b1_2, 0f, 0f));
 
@@ -110,14 +110,14 @@ namespace KleinSharp
 			ref __m128 c3 = ref res[3];
 			if (translated)
 			{
-				c3 = _mm_mul_ps(b, KLN_SWIZZLE(*c, 0, 1, 3, 1));
+				c3 = _mm_mul_ps(b, _mm_swizzle_ps(*c, 29 /* 0, 1, 3, 1 */));
 				c3 = _mm_add_ps(
 					 c3,
-					 _mm_mul_ps(KLN_SWIZZLE(b, 0, 0, 0, 3), KLN_SWIZZLE(*c, 0, 3, 2, 2)));
+					 _mm_mul_ps(_mm_swizzle_ps(b, 3 /* 0, 0, 0, 3 */), _mm_swizzle_ps(*c, 58 /* 0, 3, 2, 2 */)));
 				c3 = _mm_add_ps(
 					 c3,
-					 _mm_mul_ps(KLN_SWIZZLE(b, 0, 3, 2, 1), KLN_SWIZZLE(*c, 0, 0, 0, 0)));
-				tmp = _mm_mul_ps(KLN_SWIZZLE(b, 0, 1, 3, 2), KLN_SWIZZLE(*c, 0, 2, 1, 3));
+					 _mm_mul_ps(_mm_swizzle_ps(b, 57 /* 0, 3, 2, 1 */), _mm_swizzle_ps(*c, 0 /* 0, 0, 0, 0 */)));
+				tmp = _mm_mul_ps(_mm_swizzle_ps(b, 30 /* 0, 1, 3, 2 */), _mm_swizzle_ps(*c, 39 /* 0, 2, 1, 3 */));
 				c3 = _mm_mul_ps(_mm_set_ps(0f, 2f, 2f, 2f), _mm_sub_ps(tmp, c3));
 			}
 			if (normalized)

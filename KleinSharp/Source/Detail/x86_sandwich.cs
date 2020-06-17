@@ -38,12 +38,12 @@ namespace KleinSharp
 			// (2a2(a3 b3 + a1 b1)         + b2(a2^2 - a3^2 - a1^2)) e2 +
 			// (2a3(a1 b1 + a2 b2)         + b3(a3^2 - a1^2 - a2^2)) e3
 
-			__m128 a_zzwy = KLN_SWIZZLE(a, 1, 3, 2, 2);
-			__m128 a_wwyz = KLN_SWIZZLE(a, 2, 1, 3, 3);
+			__m128 a_zzwy = _mm_swizzle_ps(a, 122 /* 1, 3, 2, 2 */);
+			__m128 a_wwyz = _mm_swizzle_ps(a, 159 /* 2, 1, 3, 3 */);
 
 			// Left block
-			__m128 tmp = _mm_mul_ps(a_zzwy, KLN_SWIZZLE(b, 1, 3, 2, 2));
-			tmp = _mm_add_ps(tmp, _mm_mul_ps(a_wwyz, KLN_SWIZZLE(b, 2, 1, 3, 3)));
+			__m128 tmp = _mm_mul_ps(a_zzwy, _mm_swizzle_ps(b, 122 /* 1, 3, 2, 2 */));
+			tmp = _mm_add_ps(tmp, _mm_mul_ps(a_wwyz, _mm_swizzle_ps(b, 159 /* 2, 1, 3, 3 */)));
 
 			__m128 a1 = _mm_movehdup_ps(a);
 			__m128 b1 = _mm_movehdup_ps(b);
@@ -51,7 +51,7 @@ namespace KleinSharp
 			tmp = _mm_mul_ps(tmp, _mm_add_ps(a, a));
 
 			// Right block
-			__m128 a_yyzw = KLN_SWIZZLE(a, 3, 2, 1, 1);
+			__m128 a_yyzw = _mm_swizzle_ps(a, 229 /* 3, 2, 1, 1 */);
 			__m128 tmp2 = _mm_xor_ps(_mm_mul_ps(a_yyzw, a_yyzw), _mm_set_ss(-0f));
 			tmp2 = _mm_sub_ps(tmp2, _mm_mul_ps(a_zzwy, a_zzwy));
 			tmp2 = _mm_sub_ps(tmp2, _mm_mul_ps(a_wwyz, a_wwyz));
@@ -74,9 +74,9 @@ namespace KleinSharp
 
 			__m128 a_zyzw = _mm_swizzle_ps(a, 230 /* 3, 2, 1, 2 */);
 			__m128 a_ywyz = _mm_swizzle_ps(a, 157 /* 2, 1, 3, 1 */);
-			__m128 a_wzwy = KLN_SWIZZLE(a, 1, 3, 2, 3);
+			__m128 a_wzwy = _mm_swizzle_ps(a, 123 /* 1, 3, 2, 3 */);
 
-			__m128 b_xzwy = KLN_SWIZZLE(b, 1, 3, 2, 0);
+			__m128 b_xzwy = _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */);
 
 			__m128 two_zero = _mm_set_ps(2f, 2f, 2f, 0f);
 			p1 = _mm_mul_ps(a, b);
@@ -87,14 +87,14 @@ namespace KleinSharp
 			tmp = _mm_add_ps(tmp, _mm_mul_ps(a_wzwy, a_wzwy));
 			tmp = _mm_xor_ps(tmp, _mm_set_ss(-0f));
 			tmp = _mm_sub_ps(_mm_mul_ps(a_ywyz, a_ywyz), tmp);
-			tmp = _mm_mul_ps(KLN_SWIZZLE(b, 2, 1, 3, 0), tmp);
+			tmp = _mm_mul_ps(_mm_swizzle_ps(b, 156 /* 2, 1, 3, 0 */), tmp);
 
-			p1 = KLN_SWIZZLE(_mm_add_ps(p1, tmp), 1, 3, 2, 0);
+			p1 = _mm_swizzle_ps(_mm_add_ps(p1, tmp), 120 /* 1, 3, 2, 0 */);
 
 			p2 = _mm_mul_ps(a_zyzw, b_xzwy);
 			p2 = _mm_sub_ps(p2, _mm_mul_ps(a_wzwy, b));
-			p2 = _mm_mul_ps(p2, _mm_mul_ps(KLN_SWIZZLE(a, 0, 0, 0, 0), two_zero));
-			p2 = KLN_SWIZZLE(p2, 1, 3, 2, 0);
+			p2 = _mm_mul_ps(p2, _mm_mul_ps(_mm_swizzle_ps(a, 0 /* 0, 0, 0, 0 */), two_zero));
+			p2 = _mm_swizzle_ps(p2, 120 /* 1, 3, 2, 0 */);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -105,21 +105,21 @@ namespace KleinSharp
 			// (-2a1(a2 b2 + a3 b3) + b1(a2^2 + a3^2 - a1^2)) e01 +
 			// (-2a2(a3 b3 + a1 b1) + b2(a3^2 + a1^2 - a2^2)) e02 +
 
-			__m128 a_zzwy = KLN_SWIZZLE(a, 1, 3, 2, 2);
-			__m128 a_wwyz = KLN_SWIZZLE(a, 2, 1, 3, 3);
+			__m128 a_zzwy = _mm_swizzle_ps(a, 122 /* 1, 3, 2, 2 */);
+			__m128 a_wwyz = _mm_swizzle_ps(a, 159 /* 2, 1, 3, 3 */);
 
 			var p2 = _mm_mul_ps(a, b);
-			p2 = _mm_add_ps(p2, _mm_mul_ps(a_zzwy, KLN_SWIZZLE(b, 1, 3, 2, 0)));
+			p2 = _mm_add_ps(p2, _mm_mul_ps(a_zzwy, _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */)));
 			p2 = _mm_mul_ps(
 				p2, _mm_mul_ps(a_wwyz, _mm_set_ps(-2f, -2f, -2f, 0f)));
 
-			__m128 a_yyzw = KLN_SWIZZLE(a, 3, 2, 1, 1);
+			__m128 a_yyzw = _mm_swizzle_ps(a, 229 /* 3, 2, 1, 1 */);
 			__m128 tmp = _mm_mul_ps(a_yyzw, a_yyzw);
 			tmp = _mm_xor_ps(
 				_mm_set_ss(-0f), _mm_add_ps(tmp, _mm_mul_ps(a_zzwy, a_zzwy)));
 			tmp = _mm_sub_ps(tmp, _mm_mul_ps(a_wwyz, a_wwyz));
-			p2 = _mm_add_ps(p2, _mm_mul_ps(tmp, KLN_SWIZZLE(b, 2, 1, 3, 0)));
-			p2 = KLN_SWIZZLE(p2, 1, 3, 2, 0);
+			p2 = _mm_add_ps(p2, _mm_mul_ps(tmp, _mm_swizzle_ps(b, 156 /* 2, 1, 3, 0 */)));
+			p2 = _mm_swizzle_ps(p2, 120 /* 1, 3, 2, 0 */);
 
 			return p2;
 		}
@@ -132,21 +132,21 @@ namespace KleinSharp
 			// (-2a2(a0 b0 + a1 b1 + a3 b3) + b2(a3^2 + a1^2 - a2^2)) e013 +
 			// (-2a3(a0 b0 + a2 b2 + a1 b1) + b3(a1^2 + a2^2 - a3^2)) e021
 
-			__m128 a_zwyz = KLN_SWIZZLE(a, 2, 1, 3, 2);
+			__m128 a_zwyz = _mm_swizzle_ps(a, 158 /* 2, 1, 3, 2 */);
 			__m128 a_yzwy = _mm_swizzle_ps(a, 121 /* 1, 3, 2, 1 */);
 
 			var p3_out
-				= _mm_mul_ps(KLN_SWIZZLE(a, 0, 0, 0, 0), KLN_SWIZZLE(b, 0, 0, 0, 0));
+				= _mm_mul_ps(_mm_swizzle_ps(a, 0 /* 0, 0, 0, 0 */), _mm_swizzle_ps(b, 0 /* 0, 0, 0, 0 */));
 			p3_out
-				= _mm_add_ps(p3_out, _mm_mul_ps(a_zwyz, KLN_SWIZZLE(b, 2, 1, 3, 0)));
+				= _mm_add_ps(p3_out, _mm_mul_ps(a_zwyz, _mm_swizzle_ps(b, 156 /* 2, 1, 3, 0 */)));
 			p3_out
-				= _mm_add_ps(p3_out, _mm_mul_ps(a_yzwy, KLN_SWIZZLE(b, 1, 3, 2, 0)));
+				= _mm_add_ps(p3_out, _mm_mul_ps(a_yzwy, _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */)));
 			p3_out = _mm_mul_ps(
 				p3_out, _mm_mul_ps(a, _mm_set_ps(-2f, -2f, -2f, 0f)));
 
 			__m128 tmp = _mm_mul_ps(a_yzwy, a_yzwy);
 			tmp = _mm_add_ps(tmp, _mm_mul_ps(a_zwyz, a_zwyz));
-			__m128 a_wyzw = KLN_SWIZZLE(a, 3, 2, 1, 3);
+			__m128 a_wyzw = _mm_swizzle_ps(a, 231 /* 3, 2, 1, 3 */);
 			tmp = _mm_sub_ps(
 				tmp, _mm_xor_ps(_mm_mul_ps(a_wyzw, a_wyzw), _mm_set_ss(-0f)));
 
@@ -219,15 +219,15 @@ namespace KleinSharp
 
 			p1_out = a;
 
-			p2_out = _mm_mul_ps(KLN_SWIZZLE(a, 1, 3, 2, 0), KLN_SWIZZLE(c, 2, 1, 3, 0));
+			p2_out = _mm_mul_ps(_mm_swizzle_ps(a, 120 /* 1, 3, 2, 0 */), _mm_swizzle_ps(c, 156 /* 2, 1, 3, 0 */));
 
 			// Add and subtract the same quantity in the low component to produce a
 			// cancellation
 			p2_out = _mm_sub_ps(
 				p2_out,
-				_mm_mul_ps(KLN_SWIZZLE(a, 2, 1, 3, 0), KLN_SWIZZLE(c, 1, 3, 2, 0)));
+				_mm_mul_ps(_mm_swizzle_ps(a, 156 /* 2, 1, 3, 0 */), _mm_swizzle_ps(c, 120 /* 1, 3, 2, 0 */)));
 			p2_out = _mm_sub_ps(p2_out,
-				_mm_xor_ps(_mm_mul_ps(a, KLN_SWIZZLE(c, 0, 0, 0, 0)),
+				_mm_xor_ps(_mm_mul_ps(a, _mm_swizzle_ps(c, 0 /* 0, 0, 0, 0 */)),
 					_mm_set_ss(-0f)));
 			p2_out = _mm_add_ps(p2_out, p2_out);
 			p2_out = _mm_add_ps(p2_out, d);
@@ -246,7 +246,7 @@ namespace KleinSharp
 			// (a2 - 2 a0 b2) e013 +
 			// (a3 - 2 a0 b3) e021
 
-			__m128 tmp = _mm_mul_ps(KLN_SWIZZLE(a, 0, 0, 0, 0), b);
+			__m128 tmp = _mm_mul_ps(_mm_swizzle_ps(a, 0 /* 0, 0, 0, 0 */), b);
 			tmp = _mm_mul_ps(_mm_set_ps(-2f, -2f, -2f, 0f), tmp);
 			tmp = _mm_add_ps(a, tmp);
 			return tmp;
@@ -273,21 +273,21 @@ namespace KleinSharp
 			// (a3(b3^2 + b0^2 - b2^2 - b1^2) +
 			//     2a1(b0 b2 + b3 b1) + 2a2(b3 b2 - b0 b1)) e12 +
 
-			__m128 b_xwyz = KLN_SWIZZLE(b, 2, 1, 3, 0);
-			__m128 b_xzwy = KLN_SWIZZLE(b, 1, 3, 2, 0);
-			__m128 b_yxxx = KLN_SWIZZLE(b, 0, 0, 0, 1);
+			__m128 b_xwyz = _mm_swizzle_ps(b, 156 /* 2, 1, 3, 0 */);
+			__m128 b_xzwy = _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */);
+			__m128 b_yxxx = _mm_swizzle_ps(b, 1 /* 0, 0, 0, 1 */);
 			__m128 b_yxxx_2 = _mm_mul_ps(b_yxxx, b_yxxx);
 
 			__m128 tmp = _mm_mul_ps(b, b);
 			tmp = _mm_add_ps(tmp, b_yxxx_2);
-			__m128 b_tmp = KLN_SWIZZLE(b, 2, 1, 3, 2);
+			__m128 b_tmp = _mm_swizzle_ps(b, 158 /* 2, 1, 3, 2 */);
 			__m128 tmp2 = _mm_mul_ps(b_tmp, b_tmp);
-			b_tmp = KLN_SWIZZLE(b, 1, 3, 2, 3);
+			b_tmp = _mm_swizzle_ps(b, 123 /* 1, 3, 2, 3 */);
 			tmp2 = _mm_add_ps(tmp2, _mm_mul_ps(b_tmp, b_tmp));
 			tmp = _mm_sub_ps(tmp, _mm_xor_ps(tmp2, _mm_set_ss(-0f)));
 			// tmp needs to be scaled by a and set to p1_out
 
-			__m128 b_xxxx = KLN_SWIZZLE(b, 0, 0, 0, 0);
+			__m128 b_xxxx = _mm_swizzle_ps(b, 0 /* 0, 0, 0, 0 */);
 			__m128 scale = _mm_set_ps(2f, 2f, 2f, 0f);
 			tmp2 = _mm_mul_ps(b_xxxx, b_xwyz);
 			tmp2 = _mm_add_ps(tmp2, _mm_mul_ps(b, b_xzwy));
@@ -338,19 +338,19 @@ namespace KleinSharp
 
 			if (Translate)
 			{
-				__m128 czero = KLN_SWIZZLE(c, 0, 0, 0, 0);
-				__m128 c_xzwy = KLN_SWIZZLE(c, 1, 3, 2, 0);
-				__m128 c_xwyz = KLN_SWIZZLE(c, 2, 1, 3, 0);
+				__m128 czero = _mm_swizzle_ps(c, 0 /* 0, 0, 0, 0 */);
+				__m128 c_xzwy = _mm_swizzle_ps(c, 120 /* 1, 3, 2, 0 */);
+				__m128 c_xwyz = _mm_swizzle_ps(c, 156 /* 2, 1, 3, 0 */);
 
 				tmp4 = _mm_mul_ps(b, c);
 				tmp4 = _mm_sub_ps(
-					tmp4, _mm_mul_ps(b_yxxx, KLN_SWIZZLE(c, 0, 0, 0, 1)));
+					tmp4, _mm_mul_ps(b_yxxx, _mm_swizzle_ps(c, 1 /* 0, 0, 0, 1 */)));
 				tmp4 = _mm_sub_ps(tmp4,
-					_mm_mul_ps(KLN_SWIZZLE(b, 1, 3, 3, 2),
-						KLN_SWIZZLE(c, 1, 3, 3, 2)));
+					_mm_mul_ps(_mm_swizzle_ps(b, 126 /* 1, 3, 3, 2 */),
+						_mm_swizzle_ps(c, 126 /* 1, 3, 3, 2 */)));
 				tmp4 = _mm_sub_ps(tmp4,
-					_mm_mul_ps(KLN_SWIZZLE(b, 2, 1, 2, 3),
-						KLN_SWIZZLE(c, 2, 1, 2, 3)));
+					_mm_mul_ps(_mm_swizzle_ps(b, 155 /* 2, 1, 2, 3 */),
+						_mm_swizzle_ps(c, 155 /* 2, 1, 2, 3 */)));
 				tmp4 = _mm_add_ps(tmp4, tmp4);
 
 				tmp5 = _mm_mul_ps(b, c_xwyz);
@@ -370,8 +370,8 @@ namespace KleinSharp
 			for (int i = 0; i < count; ++i)
 			{
 				ref __m128 p1_in = ref inp[stride * i]; // a
-				__m128 p1_in_xzwy = KLN_SWIZZLE(p1_in, 1, 3, 2, 0);
-				__m128 p1_in_xwyz = KLN_SWIZZLE(p1_in, 2, 1, 3, 0);
+				__m128 p1_in_xzwy = _mm_swizzle_ps(p1_in, 120 /* 1, 3, 2, 0 */);
+				__m128 p1_in_xwyz = _mm_swizzle_ps(p1_in, 156 /* 2, 1, 3, 0 */);
 
 				ref __m128 p1_out = ref res[stride * i];
 
@@ -385,9 +385,9 @@ namespace KleinSharp
 					ref __m128 p2_out = ref res[2 * i + 1];
 					p2_out = _mm_mul_ps(tmp, p2_in);
 					p2_out = _mm_add_ps(
-						p2_out, _mm_mul_ps(tmp2, KLN_SWIZZLE(p2_in, 1, 3, 2, 0)));
+						p2_out, _mm_mul_ps(tmp2, _mm_swizzle_ps(p2_in, 120 /* 1, 3, 2, 0 */)));
 					p2_out = _mm_add_ps(
-						p2_out, _mm_mul_ps(tmp3, KLN_SWIZZLE(p2_in, 2, 1, 3, 0)));
+						p2_out, _mm_mul_ps(tmp3, _mm_swizzle_ps(p2_in, 156 /* 2, 1, 3, 0 */)));
 				}
 
 				// If what is being applied is a rotor, the non-directional
@@ -442,15 +442,15 @@ namespace KleinSharp
 
 			// Double-cover scale
 			__m128 dc_scale = _mm_set_ps(2f, 2f, 2f, 1f);
-			__m128 b_xwyz = KLN_SWIZZLE(b, 2, 1, 3, 0);
-			__m128 b_xzwy = KLN_SWIZZLE(b, 1, 3, 2, 0);
-			__m128 b_xxxx = KLN_SWIZZLE(b, 0, 0, 0, 0);
+			__m128 b_xwyz = _mm_swizzle_ps(b, 156 /* 2, 1, 3, 0 */);
+			__m128 b_xzwy = _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */);
+			__m128 b_xxxx = _mm_swizzle_ps(b, 0 /* 0, 0, 0, 0 */);
 
 			__m128 tmp1
-				= _mm_mul_ps(KLN_SWIZZLE(b, 0, 0, 0, 2), KLN_SWIZZLE(b, 2, 1, 3, 2));
+				= _mm_mul_ps(_mm_swizzle_ps(b, 2 /* 0, 0, 0, 2 */), _mm_swizzle_ps(b, 158 /* 2, 1, 3, 2 */));
 			tmp1 = _mm_add_ps(
 				tmp1,
-				_mm_mul_ps(_mm_swizzle_ps(b, 121 /* 1, 3, 2, 1 */), KLN_SWIZZLE(b, 3, 2, 1, 1)));
+				_mm_mul_ps(_mm_swizzle_ps(b, 121 /* 1, 3, 2, 1 */), _mm_swizzle_ps(b, 229 /* 3, 2, 1, 1 */)));
 			// Scale later with (a0, a2, a3, a1)
 			tmp1 = _mm_mul_ps(tmp1, dc_scale);
 
@@ -458,8 +458,8 @@ namespace KleinSharp
 
 			tmp2 = _mm_sub_ps(tmp2,
 				_mm_xor_ps(_mm_set_ss(-0f),
-					_mm_mul_ps(KLN_SWIZZLE(b, 0, 0, 0, 3),
-						KLN_SWIZZLE(b, 1, 3, 2, 3))));
+					_mm_mul_ps(_mm_swizzle_ps(b, 3 /* 0, 0, 0, 3 */),
+						_mm_swizzle_ps(b, 123 /* 1, 3, 2, 3 */))));
 			// Scale later with (a0, a3, a1, a2)
 			tmp2 = _mm_mul_ps(tmp2, dc_scale);
 
@@ -482,12 +482,12 @@ namespace KleinSharp
 			{
 				tmp4 = _mm_mul_ps(b_xxxx, c);
 				tmp4 = _mm_add_ps(
-					tmp4, _mm_mul_ps(b_xzwy, KLN_SWIZZLE(c, 2, 1, 3, 0)));
-				tmp4 = _mm_add_ps(tmp4, _mm_mul_ps(b, KLN_SWIZZLE(c, 0, 0, 0, 0)));
+					tmp4, _mm_mul_ps(b_xzwy, _mm_swizzle_ps(c, 156 /* 2, 1, 3, 0 */)));
+				tmp4 = _mm_add_ps(tmp4, _mm_mul_ps(b, _mm_swizzle_ps(c, 0 /* 0, 0, 0, 0 */)));
 
 				// NOTE: The high component of tmp4 is meaningless here
 				tmp4 = _mm_sub_ps(
-					tmp4, _mm_mul_ps(b_xwyz, KLN_SWIZZLE(c, 1, 3, 2, 0)));
+					tmp4, _mm_mul_ps(b_xwyz, _mm_swizzle_ps(c, 120 /* 1, 3, 2, 0 */)));
 				tmp4 = _mm_mul_ps(tmp4, dc_scale);
 			}
 
@@ -497,8 +497,8 @@ namespace KleinSharp
 			{
 				// Compute the lower block for components e1, e2, and e3
 				ref __m128 p = ref res[i];
-				p = _mm_mul_ps(tmp1, KLN_SWIZZLE(a[i], 1, 3, 2, 0));
-				p = _mm_add_ps(p, _mm_mul_ps(tmp2, KLN_SWIZZLE(a[i], 2, 1, 3, 0)));
+				p = _mm_mul_ps(tmp1, _mm_swizzle_ps(a[i], 120 /* 1, 3, 2, 0 */));
+				p = _mm_add_ps(p, _mm_mul_ps(tmp2, _mm_swizzle_ps(a[i], 156 /* 2, 1, 3, 0 */)));
 				p = _mm_add_ps(p, _mm_mul_ps(tmp3, a[i]));
 
 				if (Translate)
@@ -539,9 +539,9 @@ namespace KleinSharp
 			// component will remain unity.
 
 			__m128 two = _mm_set_ps(2f, 2f, 2f, 0f);
-			__m128 b_xxxx = KLN_SWIZZLE(b, 0, 0, 0, 0);
-			__m128 b_xwyz = KLN_SWIZZLE(b, 2, 1, 3, 0);
-			__m128 b_xzwy = KLN_SWIZZLE(b, 1, 3, 2, 0);
+			__m128 b_xxxx = _mm_swizzle_ps(b, 0 /* 0, 0, 0, 0 */);
+			__m128 b_xwyz = _mm_swizzle_ps(b, 156 /* 2, 1, 3, 0 */);
+			__m128 b_xzwy = _mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */);
 
 			__m128 tmp1 = _mm_mul_ps(b, b_xwyz);
 			tmp1 = _mm_sub_ps(tmp1, _mm_mul_ps(b_xxxx, b_xzwy));
@@ -554,22 +554,22 @@ namespace KleinSharp
 			// tmp2 needs to be scaled by (_, a2, a3, a1)
 
 			__m128 tmp3 = _mm_mul_ps(b, b);
-			__m128 b_tmp = KLN_SWIZZLE(b, 0, 0, 0, 1);
+			__m128 b_tmp = _mm_swizzle_ps(b, 1 /* 0, 0, 0, 1 */);
 			tmp3 = _mm_add_ps(tmp3, _mm_mul_ps(b_tmp, b_tmp));
-			b_tmp = KLN_SWIZZLE(b, 2, 1, 3, 2);
+			b_tmp = _mm_swizzle_ps(b, 158 /* 2, 1, 3, 2 */);
 			__m128 tmp4 = _mm_mul_ps(b_tmp, b_tmp);
-			b_tmp = KLN_SWIZZLE(b, 1, 3, 2, 3);
+			b_tmp = _mm_swizzle_ps(b, 123 /* 1, 3, 2, 3 */);
 			tmp4 = _mm_add_ps(tmp4, _mm_mul_ps(b_tmp, b_tmp));
 			tmp3 = _mm_sub_ps(tmp3, _mm_xor_ps(tmp4, _mm_set_ss(-0f)));
 			// tmp3 needs to be scaled by (a0, a1, a2, a3)
 
 			if (Translate)
 			{
-				tmp4 = _mm_mul_ps(b_xzwy, KLN_SWIZZLE(c, 2, 1, 3, 0));
+				tmp4 = _mm_mul_ps(b_xzwy, _mm_swizzle_ps(c, 156 /* 2, 1, 3, 0 */));
 				tmp4 = _mm_sub_ps(tmp4, _mm_mul_ps(b_xxxx, c));
 				tmp4 = _mm_sub_ps(
-					 tmp4, _mm_mul_ps(b_xwyz, KLN_SWIZZLE(c, 1, 3, 2, 0)));
-				tmp4 = _mm_sub_ps(tmp4, _mm_mul_ps(b, KLN_SWIZZLE(c, 0, 0, 0, 0)));
+					 tmp4, _mm_mul_ps(b_xwyz, _mm_swizzle_ps(c, 120 /* 1, 3, 2, 0 */)));
+				tmp4 = _mm_sub_ps(tmp4, _mm_mul_ps(b, _mm_swizzle_ps(c, 0 /* 0, 0, 0, 0 */)));
 
 				// Mask low component and scale other components by 2
 				tmp4 = _mm_mul_ps(tmp4, two);
@@ -579,14 +579,14 @@ namespace KleinSharp
 			for (int i = 0; i < count; ++i)
 			{
 				ref __m128 p = ref res[i];
-				p = _mm_mul_ps(tmp1, KLN_SWIZZLE(a[i], 2, 1, 3, 0));
-				p = _mm_add_ps(p, _mm_mul_ps(tmp2, KLN_SWIZZLE(a[i], 1, 3, 2, 0)));
+				p = _mm_mul_ps(tmp1, _mm_swizzle_ps(a[i], 156 /* 2, 1, 3, 0 */));
+				p = _mm_add_ps(p, _mm_mul_ps(tmp2, _mm_swizzle_ps(a[i], 120 /* 1, 3, 2, 0 */)));
 				p = _mm_add_ps(p, _mm_mul_ps(tmp3, a[i]));
 
 				if (Translate)
 				{
 					p = _mm_add_ps(
-						 p, _mm_mul_ps(tmp4, KLN_SWIZZLE(a[i], 0, 0, 0, 0)));
+						 p, _mm_mul_ps(tmp4, _mm_swizzle_ps(a[i], 0 /* 0, 0, 0, 0 */)));
 				}
 			}
 		}
@@ -602,13 +602,13 @@ namespace KleinSharp
 			// 2(b3 c1 - b2 c0 - b0 c2 - b1 c3) e013 +
 			// 2(b1 c2 - b3 c0 - b0 c3 - b2 c1) e021
 
-			__m128 tmp = _mm_mul_ps(b, KLN_SWIZZLE(c, 0, 0, 0, 0));
-			tmp = _mm_add_ps(tmp, _mm_mul_ps(KLN_SWIZZLE(b, 0, 0, 0, 0), c));
+			__m128 tmp = _mm_mul_ps(b, _mm_swizzle_ps(c, 0 /* 0, 0, 0, 0 */));
+			tmp = _mm_add_ps(tmp, _mm_mul_ps(_mm_swizzle_ps(b, 0 /* 0, 0, 0, 0 */), c));
 			tmp = _mm_add_ps(
 				 tmp,
-				 _mm_mul_ps(KLN_SWIZZLE(b, 2, 1, 3, 0), KLN_SWIZZLE(c, 1, 3, 2, 0)));
+				 _mm_mul_ps(_mm_swizzle_ps(b, 156 /* 2, 1, 3, 0 */), _mm_swizzle_ps(c, 120 /* 1, 3, 2, 0 */)));
 			tmp = _mm_sub_ps(
-				 _mm_mul_ps(KLN_SWIZZLE(b, 1, 3, 2, 0), KLN_SWIZZLE(c, 2, 1, 3, 0)),
+				 _mm_mul_ps(_mm_swizzle_ps(b, 120 /* 1, 3, 2, 0 */), _mm_swizzle_ps(c, 156 /* 2, 1, 3, 0 */)),
 				 tmp);
 			tmp = _mm_mul_ps(tmp, _mm_set_ps(2f, 2f, 2f, 0f));
 

@@ -114,7 +114,7 @@ namespace KleinSharp
 			// unpacklo: 0 0 1 1
 			res = _mm_add_ps(sum, _mm_unpacklo_ps(res, res));
 
-			return KLN_SWIZZLE(res, 2, 2, 2, 2);
+			return _mm_swizzle_ps(res, 170 /* 2, 2, 2, 2 */);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -146,7 +146,7 @@ namespace KleinSharp
 			// = (a1 b1 + a2 b2, _, a3 b3, 0)
 			res = _mm_add_ps(hi, res);
 			res = _mm_add_ss(res, _mm_movehl_ps(hi, res));
-			return KLN_SWIZZLE(res, 0, 0, 0, 0);
+			return _mm_swizzle_ps(res, 0 /* 0, 0, 0, 0 */);
 		}
 	}
 }

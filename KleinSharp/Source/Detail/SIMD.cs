@@ -13,12 +13,6 @@ namespace KleinSharp
 	public static class Simd
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte _MM_SHUFFLE(int a, int b, int c, int d)
-		{
-			return (byte)(a << 6 | b << 4 | c << 2 | d);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 _mm_mul_ps(__m128 a, __m128 b) => Sse.Multiply(a, b);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,9 +71,6 @@ namespace KleinSharp
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 _mm_add_ss(__m128 a, __m128 b) => Sse.AddScalar(a, b);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static __m128 KLN_SWIZZLE(__m128 reg, int x, int y, int z, int w) => _mm_shuffle_ps(reg, reg, _MM_SHUFFLE(x, y, z, w));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static __m128 _mm_swizzle_ps(__m128 reg, byte control) => _mm_shuffle_ps(reg, reg, control);
